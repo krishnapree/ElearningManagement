@@ -1,4 +1,6 @@
-const API_BASE = "/api";
+/// <reference types="vite/client" />
+// Use Vite's built-in import.meta.env for environment variables
+const API_BASE = import.meta.env.VITE_REACT_APP_API_URL || "/api";
 
 class APIClient {
   private async request<T>(

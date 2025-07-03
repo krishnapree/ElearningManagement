@@ -102,7 +102,7 @@ initialize_fresh_database()
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System")
 
 # Configure CORS with environment-based origins
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
+origins = os.getenv("elearningmanagement.netlify.app")
 
 app.add_middleware(
     CORSMiddleware,

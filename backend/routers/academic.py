@@ -12,7 +12,7 @@ from models import User
 from auth import AuthManager, get_current_user
 from services.academic_service import AcademicService
 
-router = APIRouter(prefix="/api/academic", tags=["Academic Management"])
+router = APIRouter(tags=["Academic Management"])
 
 # Initialize services
 auth_manager = AuthManager()

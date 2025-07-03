@@ -159,8 +159,8 @@ class PaginationParams(BaseModel):
 
 # Authentication endpoints
 from routers import auth, academic
-app.include_router(auth.router)
-app.include_router(academic.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(academic.router, prefix="/api/academic")
 
 # AI and learning endpoints
 @app.post("/api/ask")

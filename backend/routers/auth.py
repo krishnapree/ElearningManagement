@@ -12,7 +12,7 @@ from database import get_db
 from models import User
 from auth import AuthManager, get_current_user
 
-router = APIRouter(prefix="/api", tags=["Authentication"])
+router = APIRouter(tags=["Authentication"])
 
 # Pydantic models
 class LoginRequest(BaseModel):

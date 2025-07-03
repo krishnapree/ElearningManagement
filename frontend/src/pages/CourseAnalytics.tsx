@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
 import { 
   BarChart, 
   Bar, 
@@ -54,7 +53,6 @@ interface AnalyticsData {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const CourseAnalytics: React.FC = () => {
-  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -256,7 +254,7 @@ const CourseAnalytics: React.FC = () => {
                       fill="#8884d8"
                       dataKey="count"
                     >
-                      {analyticsData.grade_distribution.map((entry, index) => (
+                      {analyticsData.grade_distribution.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

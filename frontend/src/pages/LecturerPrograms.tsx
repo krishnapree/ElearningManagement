@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 
 interface Program {
   id: number;
@@ -25,7 +24,6 @@ interface Program {
 }
 
 const LecturerPrograms: React.FC = () => {
-  const { user } = useAuth();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);

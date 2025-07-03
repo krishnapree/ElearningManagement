@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 
 interface Course {
   id: number;
@@ -50,8 +48,6 @@ interface Assignment {
 }
 
 const LecturerCourseManagement: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
@@ -229,19 +225,6 @@ const LecturerCourseManagement: React.FC = () => {
       setUploadingMaterial(false);
       setUploadProgress(0);
     }
-  };
-
-  const simulateUploadProgress = () => {
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + 10;
-      });
-    }, 200);
-    return interval;
   };
 
   const handleCreateAssignment = async (e: React.FormEvent) => {

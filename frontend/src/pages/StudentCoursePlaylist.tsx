@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { Link, useParams } from "react-router-dom";
 import CoursePlayer from "../components/CoursePlayer";
 
@@ -28,7 +27,6 @@ interface Course {
 }
 
 const StudentCoursePlaylist: React.FC = () => {
-  const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
@@ -165,7 +163,6 @@ const StudentCoursePlaylist: React.FC = () => {
             <CoursePlayer
               materials={videoMaterials}
               initialMaterial={selectedMaterial}
-              onClose={() => setSelectedMaterial(null)}
             />
           </div>
         )}

@@ -18,14 +18,12 @@ interface CoursePlayerProps {
   materials: VideoMaterial[];
   initialMaterial?: VideoMaterial;
   onVideoComplete?: (materialId: number) => void;
-  onClose?: () => void;
 }
 
 const CoursePlayer: React.FC<CoursePlayerProps> = ({ 
   materials, 
   initialMaterial, 
-  onVideoComplete,
-  onClose 
+  onVideoComplete
 }) => {
   console.log('CoursePlayer received materials:', materials);
   console.log('CoursePlayer received initialMaterial:', initialMaterial);

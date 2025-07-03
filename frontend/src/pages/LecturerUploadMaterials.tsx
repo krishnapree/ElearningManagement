@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { Link, useParams } from "react-router-dom";
 
 interface Course {
@@ -20,7 +19,6 @@ interface UploadedMaterial {
 }
 
 const LecturerUploadMaterials: React.FC = () => {
-  const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +116,6 @@ const LecturerUploadMaterials: React.FC = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
         alert("Material uploaded successfully!");
         
         // Reset form

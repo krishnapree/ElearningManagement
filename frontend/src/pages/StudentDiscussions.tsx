@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 
 interface Course {
   id: number
@@ -37,7 +36,6 @@ interface Reply {
 }
 
 const StudentDiscussions: React.FC = () => {
-  const { user } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [discussions, setDiscussions] = useState<Discussion[]>([])
   const [replies, setReplies] = useState<Reply[]>([])

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 
 interface User {
   id: number;
@@ -14,7 +13,6 @@ interface User {
 }
 
 const UserManagement: React.FC = () => {
-  const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

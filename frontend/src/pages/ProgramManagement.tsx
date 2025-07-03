@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 
 interface Program {
   id: number;
@@ -56,8 +54,6 @@ interface CourseAllocation {
 }
 
 const ProgramManagement: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -102,7 +98,6 @@ const ProgramManagement: React.FC = () => {
   const [selectedProgramForCourses, setSelectedProgramForCourses] = useState<Program | null>(null);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [allocatedCourses, setAllocatedCourses] = useState<CourseAllocation[]>([]);
-  const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
   const [courseAllocationForm, setCourseAllocationForm] = useState({
     course_id: 0,
     is_required: true,
@@ -192,29 +187,6 @@ const ProgramManagement: React.FC = () => {
       setError("Failed to create program");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleUpdateProgram = async (
-    programId: number,
-    updates: Partial<Program>
-  ) => {
-    try {
-      const response = await fetch(`/api/academic/programs/${programId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ ...updates, lecturers: editSelectedLecturers }),
-      });
-
-      if (response.ok) {
-        setEditingProgram(null);
-        fetchPrograms();
-      }
-    } catch (error) {
-      console.error("Failed to update program:", error);
     }
   };
 

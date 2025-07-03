@@ -100,7 +100,8 @@ const StudentAcademicRecords: React.FC = () => {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `transcript_${user?.student_id || 'student'}.pdf`
+        const downloadName = user && typeof user === 'object' && 'student_id' in user ? user.student_id : 'student';
+        a.download = `transcript_${downloadName}.pdf`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)

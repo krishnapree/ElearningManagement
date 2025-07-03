@@ -16,7 +16,6 @@ const Ask: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [inputMode, setInputMode] = useState<"text" | "voice" | "pdf">("text");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfSummary, setPdfSummary] = useState<string>("");
   const [chatSessionId, setChatSessionId] = useState<number | null>(null);
   const [chatHistory, setChatHistory] = useState<
     Array<{ type: "user" | "ai"; content: string }>
@@ -75,7 +74,6 @@ const Ask: React.FC = () => {
 
       const data = await res.json();
       setPdfFile(file);
-      setPdfSummary(data.summary);
       setChatSessionId(data.chat_session_id);
       setChatHistory([
         {
@@ -329,7 +327,6 @@ const Ask: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setPdfFile(null);
-                          setPdfSummary("");
                           setChatSessionId(null);
                           setChatHistory([]);
                         }}

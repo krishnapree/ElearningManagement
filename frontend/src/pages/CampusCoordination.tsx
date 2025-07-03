@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 
 interface Announcement {
   id: number;
@@ -33,8 +32,9 @@ interface Event {
   created_at: string;
 }
 
+type Priority = 'high' | 'medium' | 'low';
+
 const CampusCoordination: React.FC = () => {
-  const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,12 +49,20 @@ const CampusCoordination: React.FC = () => {
     "announcement"
   );
 
-  const [newAnnouncement, setNewAnnouncement] = useState({
+  const [newAnnouncement, setNewAnnouncement] = useState<{
+    title: string;
+    content: string;
+    type: "general" | "news" | "event" | "alert";
+    priority: Priority;
+    target_audience: string[];
+    event_date: string;
+    event_location: string;
+  }>({
     title: "",
     content: "",
-    type: "general" as const,
-    priority: "medium" as const,
-    target_audience: [] as string[],
+    type: "general",
+    priority: "medium",
+    target_audience: [],
     event_date: "",
     event_location: "",
   });
@@ -611,10 +619,7 @@ const CampusCoordination: React.FC = () => {
                         onChange={(e) =>
                           setNewAnnouncement({
                             ...newAnnouncement,
-                            priority: e.target.value as
-                              | "low"
-                              | "medium"
-                              | "high",
+                            priority: e.target.value as Priority,
                           })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"

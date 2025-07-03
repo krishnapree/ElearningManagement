@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useParams, Link } from "react-router-dom";
 
 interface Program {
   id: number;
@@ -33,9 +32,7 @@ interface Course {
 }
 
 const ProgramDetails: React.FC = () => {
-  const { user } = useAuth();
   const { programId } = useParams<{ programId: string }>();
-  const navigate = useNavigate();
   
   const [program, setProgram] = useState<Program | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);

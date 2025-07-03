@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 
 interface Grade {
   id: number
@@ -38,7 +37,6 @@ interface Semester {
 }
 
 const StudentGrades: React.FC = () => {
-  const { user } = useAuth()
   const [grades, setGrades] = useState<Grade[]>([])
   const [courseGrades, setCourseGrades] = useState<CourseGrade[]>([])
   const [semesters, setSemesters] = useState<Semester[]>([])

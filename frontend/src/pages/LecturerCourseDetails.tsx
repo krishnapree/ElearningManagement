@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { useParams, Link } from "react-router-dom";
 
 interface Course {
@@ -69,7 +68,6 @@ interface Submission {
 }
 
 const LecturerCourseDetails: React.FC = () => {
-  const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -87,28 +85,6 @@ const LecturerCourseDetails: React.FC = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-
-  // Modals
-  const [showCreateAssignment, setShowCreateAssignment] = useState(false);
-  const [showUploadMaterial, setShowUploadMaterial] = useState(false);
-  const [showGradeSubmission, setShowGradeSubmission] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] =
-    useState<Submission | null>(null);
-
-  // Forms
-  const [newAssignment, setNewAssignment] = useState({
-    title: "",
-    description: "",
-    due_date: "",
-    max_points: 100,
-    assignment_type: "homework",
-    instructions: "",
-  });
-
-  const [gradeForm, setGradeForm] = useState({
-    grade: "",
-    feedback: "",
-  });
 
   useEffect(() => {
     if (courseId) {
@@ -199,66 +175,6 @@ const LecturerCourseDetails: React.FC = () => {
       }
     } catch (error) {
       console.error(`Error fetching ${activeTab} data:`, error);
-    }
-  };
-
-  const handleCreateAssignment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/assignments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          ...newAssignment,
-          course_id: course?.id,
-        }),
-      });
-
-      if (response.ok) {
-        setShowCreateAssignment(false);
-        setNewAssignment({
-          title: "",
-          description: "",
-          due_date: "",
-          max_points: 100,
-          assignment_type: "homework",
-          instructions: "",
-        });
-        fetchTabData();
-      }
-    } catch (error) {
-      console.error("Failed to create assignment:", error);
-    }
-  };
-
-  const handleGradeSubmission = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedSubmission) return;
-
-    try {
-      const response = await fetch(
-        `/api/submissions/${selectedSubmission.id}/grade`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(gradeForm),
-        }
-      );
-
-      if (response.ok) {
-        setShowGradeSubmission(false);
-        setSelectedSubmission(null);
-        setGradeForm({ grade: "", feedback: "" });
-        fetchTabData();
-      }
-    } catch (error) {
-      console.error("Failed to grade submission:", error);
     }
   };
 
@@ -455,16 +371,6 @@ const LecturerCourseDetails: React.FC = () => {
                   Quick Actions
                 </h3>
                 <div className="space-y-3">
-                  <button
-                    onClick={() => setShowCreateAssignment(true)}
-                    className="w-full flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left"
-                  >
-                    <i className="fas fa-plus text-blue-600 mr-3"></i>
-                    <span className="font-medium text-blue-700">
-                      Create Assignment
-                    </span>
-                  </button>
-
                   <Link
                     to={`/upload-materials/${courseId}`}
                     className="w-full flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left"
@@ -622,13 +528,6 @@ const LecturerCourseDetails: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">
                 Course Assignments
               </h2>
-              <button
-                onClick={() => setShowCreateAssignment(true)}
-                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                <i className="fas fa-plus mr-2"></i>
-                Create Assignment
-              </button>
             </div>
 
             <div className="grid gap-6">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 interface Department {
@@ -52,7 +52,6 @@ interface User {
 const DepartmentDetails: React.FC = () => {
   const { user } = useAuth();
   const { departmentId } = useParams<{ departmentId: string }>();
-  const navigate = useNavigate();
   
   const [department, setDepartment] = useState<Department | null>(null);
   const [availableLecturers, setAvailableLecturers] = useState<User[]>([]);

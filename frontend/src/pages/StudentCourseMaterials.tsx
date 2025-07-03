@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 import CoursePlayer from '../components/CoursePlayer'
 
 interface Course {
@@ -36,7 +35,6 @@ interface Lesson {
 }
 
 const StudentCourseMaterials: React.FC = () => {
-  const { user } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
   const [lessons, setLessons] = useState<Lesson[]>([])

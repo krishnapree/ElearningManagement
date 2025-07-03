@@ -11,7 +11,6 @@ import {
   Play,
   Upload,
   Eye,
-  Download,
   Timer,
   TrendingUp,
 } from "lucide-react";

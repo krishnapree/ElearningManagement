@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
 
 interface Course {
@@ -16,7 +15,6 @@ interface Course {
 }
 
 const LecturerCourses: React.FC = () => {
-  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

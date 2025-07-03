@@ -61,13 +61,15 @@ const UserProfile: React.FC = () => {
       console.log("Fetching user profile...");
       const data = await apiClient.getUserProfile();
       console.log("User profile data:", data);
-      setProfileData(data);
-      setFormData({
-        name: data.name || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        address: data.address || "",
-      });
+      if (typeof data === 'object' && data !== null && 'name' in data && 'email' in data && 'phone' in data && 'address' in data) {
+        setProfileData(data as UserProfileData);
+        setFormData({
+          name: (data as any).name || "",
+          email: (data as any).email || "",
+          phone: (data as any).phone || "",
+          address: (data as any).address || "",
+        });
+      }
     } catch (err) {
       console.error("Error fetching user profile:", err);
       const errorMessage =
@@ -85,7 +87,9 @@ const UserProfile: React.FC = () => {
 
     try {
       const updatedData = await apiClient.updateUserProfile(formData);
-      setProfileData(updatedData);
+      if (typeof updatedData === 'object' && updatedData !== null) {
+        setProfileData(updatedData as UserProfileData);
+      }
       setIsEditing(false);
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);

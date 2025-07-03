@@ -136,7 +136,7 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
                 fill="#8884d8"
                 dataKey="percentage"
               >
-                {topicData.map((entry, index) => (
+                {topicData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>

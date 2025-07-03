@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 
 interface Assignment {
   id: number
@@ -19,21 +18,8 @@ interface Assignment {
   file_name?: string
 }
 
-interface Submission {
-  id: number
-  assignment_id: number
-  file_name?: string
-  comments: string
-  submitted_at: string
-  grade?: number
-  feedback?: string
-  is_late: boolean
-}
-
 const StudentAssignments: React.FC = () => {
-  const { user } = useAuth()
   const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'pending' | 'submitted' | 'graded'>('pending')
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
@@ -44,7 +30,6 @@ const StudentAssignments: React.FC = () => {
 
   useEffect(() => {
     fetchAssignments()
-    fetchSubmissions()
   }, [])
 
   const fetchAssignments = async () => {
@@ -62,21 +47,6 @@ const StudentAssignments: React.FC = () => {
       console.error('Error fetching assignments:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchSubmissions = async () => {
-    try {
-      const response = await fetch('/api/student/submissions', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setSubmissions(data.submissions || [])
-      }
-    } catch (error) {
-      console.error('Error fetching submissions:', error)
     }
   }
 
@@ -102,7 +72,6 @@ const StudentAssignments: React.FC = () => {
         setSubmissionFile(null)
         setSubmissionComments('')
         fetchAssignments()
-        fetchSubmissions()
       }
     } catch (error) {
       console.error('Failed to submit assignment:', error)

@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { apiClient } from "../api/client";
-import { useAuth } from "../hooks/useAuth";
 
 const Settings: React.FC = () => {
   console.log("Settings component mounted");
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("account");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

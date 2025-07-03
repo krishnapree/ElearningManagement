@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 interface Department {
@@ -24,7 +23,6 @@ interface DepartmentForm {
 }
 
 const DepartmentManagement: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);

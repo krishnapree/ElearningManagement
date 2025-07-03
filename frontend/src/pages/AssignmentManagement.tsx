@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
 
 interface Assignment {
   id: number;
@@ -33,7 +32,6 @@ interface Submission {
 }
 
 const AssignmentManagement: React.FC = () => {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);

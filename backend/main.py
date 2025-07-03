@@ -101,16 +101,19 @@ initialize_fresh_database()
 
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System")
 
-# Configure CORS with environment-based origins
-origins = os.getenv("elearningmanagement.netlify.app")
+allow_origins = [
+    os.getenv("FRONTEND_URL", "https://elearningmanagement.netlify.app"),
+    "http://localhost:5173"
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Mount static files for video materials
 app.mount("/videos", StaticFiles(directory="uploads/videos"), name="videos")

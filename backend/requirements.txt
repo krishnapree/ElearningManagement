@@ -65,3 +65,4 @@ python-magic==0.4.27
 # API Documentation
 # fastapi-openapi==0.1.0
 psycopg2-binary
+PyJWT==2.8.0

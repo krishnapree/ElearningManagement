@@ -45,8 +45,13 @@ const Dashboard: React.FC = () => {
         throw new Error('Failed to load dashboard data')
       }
 
-      const dashboardData = await response.json()
-      setData(dashboardData)
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error("Invalid JSON response", e);
+      }
+      setData(data)
     } catch (error) {
       console.error('Error loading dashboard:', error)
     } finally {

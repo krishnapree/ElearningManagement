@@ -54,7 +54,12 @@ const LecturerDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (e) {
+          console.error("Invalid JSON response", e);
+        }
         setDashboardData(data);
       }
     } catch (error) {

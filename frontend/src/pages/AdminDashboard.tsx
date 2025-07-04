@@ -45,9 +45,14 @@ const AdminDashboard: React.FC = () => {
       const response = await fetch("/api/dashboard", {
         credentials: "include",
       });
-      if (response.ok) {
-        const overviewData = await response.json();
-        setOverview(overviewData);
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error("Invalid JSON response", e);
+      }
+      if (data) {
+        setOverview(data);
       } else {
         console.error("Failed to fetch academic overview:", response.status);
       }

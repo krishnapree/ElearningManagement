@@ -37,7 +37,13 @@ class APIClient {
         throw error;
       }
 
-      return response.json();
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error("Invalid JSON response", e);
+      }
+      return data;
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
       throw error;

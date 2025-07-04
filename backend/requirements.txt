@@ -37,7 +37,6 @@ requests==2.31.0
 # Environment & Configuration
 python-dotenv==1.0.0
 pydantic==2.3.0
-pydantic-core==2.10.1
 pydantic-settings==2.1.0
 
 # Utilities

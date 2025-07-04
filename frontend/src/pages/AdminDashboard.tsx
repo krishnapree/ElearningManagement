@@ -42,14 +42,14 @@ const AdminDashboard: React.FC = () => {
       setError(null);
 
       // Fetch academic overview
-      const overviewResponse = await fetch("/api/academic/overview", {
+      const response = await fetch("/api/dashboard", {
         credentials: "include",
       });
-      if (overviewResponse.ok) {
-        const overviewData = await overviewResponse.json();
+      if (response.ok) {
+        const overviewData = await response.json();
         setOverview(overviewData);
       } else {
-        console.error("Failed to fetch academic overview:", overviewResponse.status);
+        console.error("Failed to fetch academic overview:", response.status);
       }
 
       // Fetch recent users (students)

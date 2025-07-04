@@ -56,7 +56,7 @@ const StudentDashboard: React.FC = () => {
       setLoading(true);
       console.log('Fetching dashboard data for user:', user?.id);
       
-      const response = await fetch("/api/users/dashboard", {
+      const response = await fetch("/api/dashboard", {
         credentials: "include",
       });
 

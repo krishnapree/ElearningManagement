@@ -105,6 +105,8 @@ allow_origins = [
     os.getenv("FRONTEND_URL", "https://elearningmanagement.netlify.app"),
     "http://localhost:5173"
 ]
+if not os.getenv("FRONTEND_URL"):
+    logger.warning("FRONTEND_URL environment variable is not set. CORS may fail in production. Set FRONTEND_URL to your deployed frontend domain.")
 
 app.add_middleware(
     CORSMiddleware,

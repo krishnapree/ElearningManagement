@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict, Any
+import os
 
 from database import get_db
 from models import User
@@ -26,6 +27,10 @@ class RegisterRequest(BaseModel):
 
 # Initialize auth manager
 auth_manager = AuthManager()
+
+# Determine if running in production for secure cookies
+IS_PRODUCTION = os.getenv("ENV", "development").lower() == "production"
+COOKIE_SECURE = IS_PRODUCTION
 
 @router.post("/register")
 async def register(request: RegisterRequest, response: Response, db: Session = Depends(get_db)):
@@ -48,7 +53,7 @@ async def register(request: RegisterRequest, response: Response, db: Session = D
             key="access_token",
             value=token,
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=COOKIE_SECURE,  # Dynamic based on environment
             samesite="lax",
             max_age=86400 * 7  # 7 days
         )
@@ -79,7 +84,7 @@ async def login(request: LoginRequest, response: Response, db: Session = Depends
             key="access_token",
             value=token,
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=COOKIE_SECURE,  # Dynamic based on environment
             samesite="lax",
             max_age=86400 * 7  # 7 days
         )
@@ -143,7 +148,7 @@ async def refresh_token(request: Request, response: Response, db: Session = Depe
             key="access_token",
             value=new_token,
             httponly=True,
-            secure=False,
+            secure=COOKIE_SECURE,  # Dynamic based on environment
             samesite="lax",
             max_age=86400 * 7
         )

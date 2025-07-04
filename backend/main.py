@@ -102,8 +102,7 @@ initialize_fresh_database()
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System")
 
 allow_origins = [
-    os.getenv("FRONTEND_URL", "https://elearningmanagement.netlify.app"),
-    "http://localhost:5173"
+    os.getenv("FRONTEND_URL", "https://elearningmanagement.onrender.com")
 ]
 if not os.getenv("FRONTEND_URL"):
     logger.warning("FRONTEND_URL environment variable is not set. CORS may fail in production. Set FRONTEND_URL to your deployed frontend domain.")

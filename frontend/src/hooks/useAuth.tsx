@@ -19,7 +19,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      // Check if there's a selected user in localStorage
       const selectedUser = localStorage.getItem('selectedUser');
       if (selectedUser) {
         const userData = JSON.parse(selectedUser);
@@ -34,21 +33,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
-    // This function is kept for compatibility but won't be used
-    // Users will select roles from the home page instead
+  const login = async (_email: string, _password: string) => {
     throw new Error("Please select a role from the home page");
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    // This function is kept for compatibility but won't be used
-    // Users will select roles from the home page instead
+  const register = async (_name: string, _email: string, _password: string) => {
     throw new Error("Please select a role from the home page");
   };
 
   const logout = async () => {
     try {
-      // Remove the selected user from localStorage
       localStorage.removeItem('selectedUser');
       setUser(null);
     } catch (error) {

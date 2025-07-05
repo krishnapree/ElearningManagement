@@ -25,7 +25,6 @@ class APIClient {
           message: `HTTP error ${response.status}`,
         }));
 
-        // Structured error with status code and message
         const error = new Error(
           errorData.message || `HTTP ${response.status}`
         ) as Error & {
@@ -51,24 +50,19 @@ class APIClient {
   }
 
   // Authentication - Simplified for demo
-  async login(email: string, password: string) {
-    // For demo purposes, this won't be used
+  async login(_email: string, _password: string) {
     throw new Error("Please select a role from the home page");
   }
 
-  async register(name: string, email: string, password: string) {
-    // For demo purposes, this won't be used
+  async register(_name: string, _email: string, _password: string) {
     throw new Error("Please select a role from the home page");
   }
 
   async logout() {
-    // For demo purposes, just return success
     return { message: "Logged out successfully" };
   }
 
   async getCurrentUser() {
-    // For demo purposes, return a default user
-    // In a real app, this would check the actual user from cookies/tokens
     return {
       user: {
         id: 3,

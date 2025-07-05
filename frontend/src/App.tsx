@@ -1,4 +1,3 @@
-// import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -6,7 +5,6 @@ import Ask from "./pages/Ask";
 import Quiz from "./pages/Quiz";
 import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
-
 import Courses from "./pages/Courses";
 import StudentEnrollments from "./pages/StudentEnrollments";
 import StudentAssignments from "./pages/StudentAssignments";
@@ -34,24 +32,25 @@ import CourseManagement from "./pages/CourseManagement";
 import CampusCoordination from "./pages/CampusCoordination";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
-import { useAuth } from "./hooks/useAuth";
 import CourseDetails from "./pages/CourseDetails";
+import { useAuth } from "./hooks/useAuth";
 
 function App() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth(); // removed unused 'user'
   const location = useLocation();
 
-  // Pages that should have full-screen layout without navbar and container
   const fullScreenPages = ["/", "/login", "/register"];
   const isFullScreenPage = fullScreenPages.includes(location.pathname);
-
-  // Apply orange theme to all pages except Home
   const isHomePage = location.pathname === "/";
   const shouldUseOrangeTheme = !isHomePage;
 
   if (loading) {
     return (
-      <div className={`min-h-screen bg-gray-50 flex items-center justify-center ${shouldUseOrangeTheme ? 'orange-theme' : ''}`}>
+      <div
+        className={`min-h-screen bg-gray-50 flex items-center justify-center ${
+          shouldUseOrangeTheme ? "orange-theme" : ""
+        }`}
+      >
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
       </div>
     );
@@ -59,7 +58,9 @@ function App() {
 
   if (isFullScreenPage) {
     return (
-      <div className={`min-h-screen ${shouldUseOrangeTheme ? 'orange-theme' : ''}`}>
+      <div
+        className={`min-h-screen ${shouldUseOrangeTheme ? "orange-theme" : ""}`}
+      >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Navigate to="/" />} />
@@ -70,7 +71,11 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${shouldUseOrangeTheme ? 'orange-theme' : ''}`}>
+    <div
+      className={`min-h-screen bg-gray-50 ${
+        shouldUseOrangeTheme ? "orange-theme" : ""
+      }`}
+    >
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <Routes>

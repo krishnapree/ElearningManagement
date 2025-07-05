@@ -101,9 +101,13 @@ initialize_fresh_database()
 
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System")
 
+origins = [
+    "https://elearningmanagement.onrender.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://elearningmanagement.onrender.com"],  # Your frontend URL
+    allow_origins=origins,                      # ✔ Correct frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

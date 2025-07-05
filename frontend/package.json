@@ -5,7 +5,7 @@
   "main": "tailwind.config.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && cp static.json dist/static.json",
     "serve": "vite preview",
     "postinstall": "chmod +x node_modules/.bin/vite"
   },

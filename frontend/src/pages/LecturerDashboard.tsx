@@ -36,7 +36,7 @@ interface LecturerDashboard {
 }
 
 const LecturerDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [dashboardData, setDashboardData] = useState<LecturerDashboard | null>(
     null
   );
@@ -106,7 +106,7 @@ const LecturerDashboard: React.FC = () => {
             Lecturer Dashboard
           </h1>
           <p className="text-gray-600">
-            Welcome back, {user?.name}. {dashboardData.current_semester.name}{" "}
+            Welcome back, {_user?.name}. {dashboardData.current_semester.name}{" "}
             semester overview.
           </p>
         </div>

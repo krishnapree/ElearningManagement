@@ -25,7 +25,7 @@ interface User {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [overview, setOverview] = useState<AcademicOverview | null>(null);
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +112,7 @@ const AdminDashboard: React.FC = () => {
             Admin Dashboard
           </h1>
           <p className="text-gray-600">
-            Welcome back, {user?.name}. Here's your system overview.
+            Welcome back, {_user?.name}. Here's your system overview.
           </p>
         </div>
 

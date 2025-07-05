@@ -6,10 +6,10 @@ import LecturerDashboard from "./LecturerDashboard";
 import Dashboard from "./Dashboard"; // Fallback to original analytics dashboard
 
 const MainDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
 
   // Get user role from backend user data
-  const userRole = user?.role || "student";
+  const userRole = _user?.role || "student";
 
   // Render role-specific dashboard
   switch (userRole) {

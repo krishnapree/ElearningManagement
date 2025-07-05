@@ -27,23 +27,23 @@ interface Course {
 }
 
 const StudentCoursePlaylist: React.FC = () => {
-  const { courseId } = useParams<{ courseId: string }>();
+  const { courseId: _courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMaterial, setSelectedMaterial] = useState<CourseMaterial | null>(null);
   const [activeTab, setActiveTab] = useState<'videos' | 'documents' | 'lessons'>('videos');
 
   useEffect(() => {
-    if (courseId) {
+    if (_courseId) {
       fetchCourseMaterials();
     }
-  }, [courseId]);
+  }, [_courseId]);
 
   const fetchCourseMaterials = async () => {
     try {
       setLoading(true);
-      console.log('Fetching course materials for courseId:', courseId);
-      const response = await fetch(`/api/courses/${courseId}/materials`, {
+      console.log('Fetching course materials for courseId:', _courseId);
+      const response = await fetch(`/api/courses/${_courseId}/materials`, {
         credentials: "include",
       });
 
@@ -171,7 +171,7 @@ const StudentCoursePlaylist: React.FC = () => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
           <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Information</h3>
           <div className="text-xs text-yellow-700 space-y-1">
-            <p>Course ID: {courseId}</p>
+            <p>Course ID: {_courseId}</p>
             <p>Total materials: {course.materials.length}</p>
             <p>Video materials: {videoMaterials.length}</p>
             <p>Document materials: {documentMaterials.length}</p>

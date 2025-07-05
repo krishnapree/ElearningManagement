@@ -51,7 +51,7 @@ interface CourseAnnouncement {
 }
 
 const CourseDetails: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -182,7 +182,7 @@ const CourseDetails: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                {user?.role === "admin" && (
+                {_user?.role === "admin" && (
                   <button
                     onClick={() => setIsEditing(!isEditing)}
                     className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"

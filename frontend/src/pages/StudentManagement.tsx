@@ -15,7 +15,7 @@ interface Student {
 }
 
 const StudentManagement: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ const StudentManagement: React.FC = () => {
 
       // Check user role to determine which endpoint to use
       let endpoint = "/api/users/by-role/student"; // Default for admin
-      if (user?.role === "lecturer") {
+      if (_user?.role === "lecturer") {
         endpoint = "/api/lecturer/students"; // Lecturer-specific endpoint
       }
 
@@ -81,10 +81,10 @@ const StudentManagement: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {user?.role === "lecturer" ? "My Students" : "Student Management"}
+            {_user?.role === "lecturer" ? "My Students" : "Student Management"}
           </h1>
           <p className="text-gray-600">
-            {user?.role === "lecturer"
+            {_user?.role === "lecturer"
               ? "View students enrolled in your courses"
               : "View and manage student information"}
           </p>

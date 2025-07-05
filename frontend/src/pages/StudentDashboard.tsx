@@ -41,7 +41,7 @@ interface StudentDashboard {
 }
 
 const StudentDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [dashboardData, setDashboardData] = useState<StudentDashboard | null>(
     null
   );
@@ -54,7 +54,7 @@ const StudentDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching dashboard data for user:', user?.id);
+      console.log('Fetching dashboard data for user:', _user?.id);
       
       const response = await fetch("/api/dashboard", {
         credentials: "include",
@@ -139,7 +139,7 @@ const StudentDashboard: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.name}!
+            Welcome back, {_user?.name}!
           </h1>
           <p className="text-gray-600">
             {currentSemester.name} •{" "}

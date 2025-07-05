@@ -14,7 +14,7 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register: _register } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -64,7 +64,7 @@ const Register: React.FC = () => {
     setError("");
 
     try {
-      await register(formData.name, formData.email, formData.password);
+      await _register(formData.name, formData.email, formData.password);
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");

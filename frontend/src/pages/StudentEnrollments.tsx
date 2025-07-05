@@ -17,7 +17,7 @@ interface Enrollment {
 }
 
 const StudentEnrollments: React.FC = () => {
-  const { user } = useAuth()
+  const { user: _user } = useAuth()
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +31,7 @@ const StudentEnrollments: React.FC = () => {
       setLoading(true)
       setError(null)
       
-      console.log('Fetching enrollments for user:', user?.id)
+      console.log('Fetching enrollments for user:', _user?.id)
       
       const response = await fetch('/api/student/enrollments', {
         credentials: 'include'

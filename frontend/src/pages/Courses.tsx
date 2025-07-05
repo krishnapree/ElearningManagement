@@ -27,7 +27,7 @@ interface Program {
 }
 
 const Courses: React.FC = () => {
-  const { user } = useAuth()
+  const { user: _user } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
@@ -176,7 +176,7 @@ const Courses: React.FC = () => {
             Browse Courses
           </h1>
           <p className="text-gray-600">
-            {user?.role === 'student' 
+            {_user?.role === 'student' 
               ? 'Discover and enroll in courses for the current semester'
               : 'View all available courses in the system'
             }
@@ -184,7 +184,7 @@ const Courses: React.FC = () => {
         </div>
 
         {/* Program Selection - Only for Students */}
-        {user?.role === 'student' && (
+        {_user?.role === 'student' && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Select Your Program</h3>
@@ -249,7 +249,7 @@ const Courses: React.FC = () => {
                 <option value="4">4 Credits</option>
               </select>
             </div>
-            {user?.role === 'student' && (
+            {_user?.role === 'student' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Availability
@@ -308,7 +308,7 @@ const Courses: React.FC = () => {
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">{course.enrolled_count}</span> / {course.max_capacity} enrolled
                   </div>
-                  {user?.role === 'student' ? (
+                  {_user?.role === 'student' ? (
                     <div className={`text-sm font-medium ${
                       course.available_spots > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
@@ -326,7 +326,7 @@ const Courses: React.FC = () => {
                 {/* Action Buttons */}
                 <div className="space-y-2">
                   {/* Student Actions */}
-                  {user?.role === 'student' && (
+                  {_user?.role === 'student' && (
                     <div className="flex space-x-2">
                       <Link
                         to={`/course-playlist/${course.id}`}
@@ -361,7 +361,7 @@ const Courses: React.FC = () => {
                   )}
 
                   {/* Lecturer Actions */}
-                  {user?.role === 'lecturer' && course.lecturer_name === user.name && (
+                  {_user?.role === 'lecturer' && course.lecturer_name === _user.name && (
                     <div className="flex space-x-2">
                       <Link
                         to={`/upload-materials/${course.id}`}
@@ -381,7 +381,7 @@ const Courses: React.FC = () => {
                   )}
 
                   {/* Admin Actions */}
-                  {user?.role === 'admin' && (
+                  {_user?.role === 'admin' && (
                     <div className="flex space-x-2">
                       <Link
                         to={`/course-playlist/${course.id}`}

@@ -50,7 +50,7 @@ interface Transcript {
 }
 
 const StudentAcademicRecords: React.FC = () => {
-  const { user } = useAuth()
+  const { user: _user } = useAuth()
   const [academicRecord, setAcademicRecord] = useState<AcademicRecord | null>(null)
   const [transcript, setTranscript] = useState<Transcript | null>(null)
   const [loading, setLoading] = useState(true)
@@ -100,7 +100,7 @@ const StudentAcademicRecords: React.FC = () => {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        const downloadName = user && typeof user === 'object' && 'student_id' in user ? user.student_id : 'student';
+        const downloadName = _user && typeof _user === 'object' && 'student_id' in _user ? _user.student_id : 'student';
         a.download = `transcript_${downloadName}.pdf`
         document.body.appendChild(a)
         a.click()

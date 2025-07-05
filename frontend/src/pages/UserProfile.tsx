@@ -17,7 +17,7 @@ interface UserProfileData {
 
 const UserProfile: React.FC = () => {
   console.log("UserProfile component mounted");
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,9 +39,9 @@ const UserProfile: React.FC = () => {
     // Set mock data for testing
     const mockData = {
       id: 1,
-      name: user?.name || "Test User",
-      email: user?.email || "test@example.com",
-      role: user?.role || "admin",
+      name: _user?.name || "Test User",
+      email: _user?.email || "test@example.com",
+      role: _user?.role || "admin",
       phone: "123-456-7890",
       address: "123 Test Street",
       is_active: true,
@@ -54,7 +54,7 @@ const UserProfile: React.FC = () => {
       phone: mockData.phone,
       address: mockData.address,
     });
-  }, [user]);
+  }, [_user]);
 
   const fetchUserProfile = async () => {
     try {

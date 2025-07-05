@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.tsx";
+import RoleSwitcher from "./RoleSwitcher";
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -20,6 +21,12 @@ const Navbar: React.FC = () => {
     } catch (error) {
       console.error("Logout error:", error);
     }
+  };
+
+  const handleSwitchRole = () => {
+    // Clear the current user and navigate to home to select a new role
+    localStorage.removeItem('selectedUser');
+    navigate("/");
   };
 
   const isActive = (path: string) => {
@@ -84,9 +91,24 @@ const Navbar: React.FC = () => {
 
   // Get user role for conditional navigation
   const getUserRole = () => {
-    // This will be updated when we integrate with the backend user role
-    return user?.role || "student"; // Default to student for now
+    return user?.role || "student";
   };
+
+  // Get role color and icon
+  const getRoleInfo = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return { color: 'text-red-600', bgColor: 'bg-red-100', icon: 'fas fa-shield-alt' };
+      case 'lecturer':
+        return { color: 'text-blue-600', bgColor: 'bg-blue-100', icon: 'fas fa-chalkboard-teacher' };
+      case 'student':
+        return { color: 'text-green-600', bgColor: 'bg-green-100', icon: 'fas fa-user-graduate' };
+      default:
+        return { color: 'text-gray-600', bgColor: 'bg-gray-100', icon: 'fas fa-user' };
+    }
+  };
+
+  const roleInfo = getRoleInfo(getUserRole());
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
@@ -117,6 +139,16 @@ const Navbar: React.FC = () => {
 
             {user && (
               <>
+                <Link
+                  to="/dashboard"
+                  className={`text-gray-600 transition-colors ${
+                    shouldUseOrangeTheme
+                      ? `hover:text-orange-600 ${isActive("/dashboard") ? "text-orange-600 font-medium" : ""}`
+                      : `hover:text-primary-600 ${isActive("/dashboard") ? "text-primary-600 font-medium" : ""}`
+                  }`}
+                >
+                  Dashboard
+                </Link>
                 {/* AI Learning Dropdown */}
                 <div className="relative">
                   <button
@@ -210,7 +242,8 @@ const Navbar: React.FC = () => {
                   </button>
 
                   {activeDropdown === "academic" && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      {/* Student-specific links */}
                       {getUserRole() === "student" && (
                         <>
                           <Link
@@ -226,7 +259,7 @@ const Navbar: React.FC = () => {
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-user-graduate mr-2"></i>
+                            <i className="fas fa-user-plus mr-2"></i>
                             My Enrollments
                           </Link>
                           <Link
@@ -258,7 +291,7 @@ const Navbar: React.FC = () => {
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-folder-open mr-2"></i>
+                            <i className="fas fa-download mr-2"></i>
                             Course Materials
                           </Link>
                           <Link
@@ -274,28 +307,46 @@ const Navbar: React.FC = () => {
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-clipboard-list mr-2"></i>
+                            <i className="fas fa-question-circle mr-2"></i>
                             Assessments
                           </Link>
                         </>
                       )}
+
+                      {/* Lecturer-specific links */}
                       {getUserRole() === "lecturer" && (
                         <>
-                          <Link
-                            to="/courses"
-                            className={getDropdownLinkClass()}
-                            onClick={() => setActiveDropdown(null)}
-                          >
-                            <i className="fas fa-book mr-2"></i>
-                            Browse Courses
-                          </Link>
                           <Link
                             to="/my-courses"
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-chalkboard-teacher mr-2"></i>
+                            <i className="fas fa-book mr-2"></i>
                             My Courses
+                          </Link>
+                          <Link
+                            to="/lecturer-course-management"
+                            className={getDropdownLinkClass()}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <i className="fas fa-cogs mr-2"></i>
+                            Course Management
+                          </Link>
+                          <Link
+                            to="/lecturer-assessments"
+                            className={getDropdownLinkClass()}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <i className="fas fa-question-circle mr-2"></i>
+                            Assessments
+                          </Link>
+                          <Link
+                            to="/students"
+                            className={getDropdownLinkClass()}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <i className="fas fa-users mr-2"></i>
+                            My Students
                           </Link>
                           <Link
                             to="/my-programs"
@@ -305,34 +356,20 @@ const Navbar: React.FC = () => {
                             <i className="fas fa-graduation-cap mr-2"></i>
                             My Programs
                           </Link>
+                        </>
+                      )}
+
+                      {/* Admin-specific links */}
+                      {getUserRole() === "admin" && (
+                        <>
                           <Link
-                            to="/lecturer-course-management"
-                            className={getDropdownLinkClass()}
-                            onClick={() => setActiveDropdown(null)}
-                          >
-                            <i className="fas fa-upload mr-2"></i>
-                            Course Management
-                          </Link>
-                          <Link
-                            to="/lecturer-assessments"
-                            className={getDropdownLinkClass()}
-                            onClick={() => setActiveDropdown(null)}
-                          >
-                            <i className="fas fa-clipboard-list mr-2"></i>
-                            Assessments
-                          </Link>
-                          <Link
-                            to="/students"
+                            to="/user-management"
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
                             <i className="fas fa-users mr-2"></i>
-                            Students
+                            User Management
                           </Link>
-                        </>
-                      )}
-                      {getUserRole() === "admin" && (
-                        <>
                           <Link
                             to="/departments"
                             className={getDropdownLinkClass()}
@@ -354,69 +391,75 @@ const Navbar: React.FC = () => {
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-book-open mr-2"></i>
+                            <i className="fas fa-book mr-2"></i>
                             Course Management
                           </Link>
                           <Link
-                            to="/user-management"
+                            to="/assignments"
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-users-cog mr-2"></i>
-                            User Management
+                            <i className="fas fa-tasks mr-2"></i>
+                            Assignments
+                          </Link>
+                          <Link
+                            to="/course-analytics"
+                            className={getDropdownLinkClass()}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <i className="fas fa-chart-bar mr-2"></i>
+                            Analytics
                           </Link>
                           <Link
                             to="/campus-coordination"
                             className={getDropdownLinkClass()}
                             onClick={() => setActiveDropdown(null)}
                           >
-                            <i className="fas fa-bullhorn mr-2"></i>
+                            <i className="fas fa-map-marker-alt mr-2"></i>
                             Campus Coordination
                           </Link>
                         </>
                       )}
+
+                      {/* Common links for all roles */}
+                      <div className="border-t border-gray-200 my-2"></div>
+                      <Link
+                        to="/courses"
+                        className={getDropdownLinkClass()}
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <i className="fas fa-search mr-2"></i>
+                        All Courses
+                      </Link>
                     </div>
                   )}
                 </div>
-
-                {/* Dashboard */}
-                <Link
-                  to="/dashboard"
-                  className={`text-gray-600 transition-colors ${
-                    shouldUseOrangeTheme
-                      ? `hover:text-orange-600 ${isActive("/dashboard") ? "text-orange-600 font-medium" : ""}`
-                      : `hover:text-primary-600 ${isActive("/dashboard") ? "text-primary-600 font-medium" : ""}`
-                  }`}
-                >
-                  Dashboard
-                </Link>
               </>
             )}
           </div>
 
-          {/* User Actions */}
+          {/* User Menu */}
           <div className="flex items-center space-x-4">
+            {user && (
+              <RoleSwitcher />
+            )}
             {user ? (
               <div className="relative" ref={userDropdownRef}>
                 <button
                   type="button"
                   onClick={() => toggleDropdown("user")}
-                  className={`flex items-center space-x-2 text-gray-700 transition-colors focus:outline-none ${
-                    shouldUseOrangeTheme ? 'hover:text-orange-600' : 'hover:text-primary-600'
-                  }`}
+                  className="flex items-center space-x-3 text-gray-700 hover:text-gray-900 transition-colors"
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    shouldUseOrangeTheme ? 'bg-orange-100' : 'bg-primary-100'
-                  }`}>
-                    <span className={`font-medium text-sm ${
-                      shouldUseOrangeTheme ? 'text-orange-600' : 'text-primary-600'
-                    }`}>
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
+                  {/* Role indicator */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${roleInfo.bgColor}`}>
+                    <i className={`${roleInfo.icon} ${roleInfo.color} text-sm`}></i>
                   </div>
-                  <span className="hidden md:block font-medium">
-                    {user.name}
-                  </span>
+                  
+                  <div className="hidden md:block text-left">
+                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                    <div className="text-xs text-gray-500 capitalize">{user.role}</div>
+                  </div>
+                  
                   <i
                     className={`fas fa-chevron-down text-xs transition-transform ${
                       activeDropdown === "user" ? "rotate-180" : ""
@@ -426,96 +469,62 @@ const Navbar: React.FC = () => {
 
                 {activeDropdown === "user" && (
                   <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                      <p className={`text-xs capitalize ${
-                        shouldUseOrangeTheme ? 'text-orange-600' : 'text-primary-600'
-                      }`}>
-                        {user.role}
-                      </p>
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      <div className="text-xs text-gray-500 capitalize">{user.role}</div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log(
-                          "User Profile clicked - using window.location"
-                        );
-                        setActiveDropdown(null);
-                        window.location.href = "/profile";
-                      }}
-                      className={`flex items-center w-full px-4 py-2 text-gray-700 transition-colors text-left ${
-                        shouldUseOrangeTheme
-                          ? 'hover:bg-orange-50 hover:text-orange-600'
-                          : 'hover:bg-primary-50 hover:text-primary-600'
-                      }`}
+                    
+                    <Link
+                      to="/profile"
+                      className={getDropdownLinkClass()}
+                      onClick={() => setActiveDropdown(null)}
                     >
-                      <i className="fas fa-user mr-3"></i>
-                      User Profile
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log("Settings clicked - using window.location");
-                        setActiveDropdown(null);
-                        window.location.href = "/settings";
-                      }}
-                      className={`flex items-center w-full px-4 py-2 text-gray-700 transition-colors text-left ${
-                        shouldUseOrangeTheme
-                          ? 'hover:bg-orange-50 hover:text-orange-600'
-                          : 'hover:bg-primary-50 hover:text-primary-600'
-                      }`}
+                      <i className="fas fa-user mr-2"></i>
+                      Profile
+                    </Link>
+                    
+                    <Link
+                      to="/settings"
+                      className={getDropdownLinkClass()}
+                      onClick={() => setActiveDropdown(null)}
                     >
-                      <i className="fas fa-cog mr-3"></i>
+                      <i className="fas fa-cog mr-2"></i>
                       Settings
+                    </Link>
+                    
+                    <button
+                      onClick={handleSwitchRole}
+                      className={`w-full text-left ${getDropdownLinkClass()}`}
+                    >
+                      <i className="fas fa-exchange-alt mr-2"></i>
+                      Switch Role
                     </button>
-                    <div className="border-t border-gray-100 mt-2 pt-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log("Logout clicked");
-                          setActiveDropdown(null);
-                          handleLogout();
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
-                      >
-                        <i className="fas fa-sign-out-alt mr-3"></i>
-                        Logout
-                      </button>
-                    </div>
+                    
+                    <div className="border-t border-gray-200 my-2"></div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className={`w-full text-left ${getDropdownLinkClass()} text-red-600 hover:text-red-700`}
+                    >
+                      <i className="fas fa-sign-out-alt mr-2"></i>
+                      Logout
+                    </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Link to="/login" className="btn btn-outline btn-sm">
-                  Login
-                </Link>
-                <Link to="/register" className="btn btn-primary btn-sm">
-                  Sign Up
-                </Link>
-              </div>
+              <Link
+                to="/"
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                  shouldUseOrangeTheme
+                    ? "bg-orange-600 text-white hover:bg-orange-700"
+                    : "bg-primary-600 text-white hover:bg-primary-700"
+                }`}
+              >
+                <i className="fas fa-sign-in-alt mr-2"></i>
+                Get Started
+              </Link>
             )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              type="button"
-              className="text-gray-600 hover:text-gray-800"
-              title="Open mobile menu"
-              aria-label="Open mobile menu"
-            >
-              <i className="fas fa-bars text-xl"></i>
-            </button>
           </div>
         </div>
       </div>

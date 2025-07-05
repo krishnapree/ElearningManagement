@@ -64,14 +64,8 @@ function App() {
       <div className={`min-h-screen ${shouldUseOrangeTheme ? 'orange-theme' : ''}`}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route
-            path="/login"
-            element={!user ? <Login /> : <Navigate to="/dashboard" />}
-          />
-          <Route
-            path="/register"
-            element={!user ? <Register /> : <Navigate to="/dashboard" />}
-          />
+          <Route path="/login" element={<Navigate to="/" />} />
+          <Route path="/register" element={<Navigate to="/" />} />
         </Routes>
       </div>
     );
@@ -83,161 +77,45 @@ function App() {
       <main className="container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route
-            path="/login"
-            element={!user ? <Login /> : <Navigate to="/dashboard" />}
-          />
-          <Route
-            path="/register"
-            element={!user ? <Register /> : <Navigate to="/dashboard" />}
-          />
+          <Route path="/login" element={<Navigate to="/" />} />
+          <Route path="/register" element={<Navigate to="/" />} />
 
-          {/* Protected routes */}
-          <Route
-            path="/ask"
-            element={user ? <Ask /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/quiz"
-            element={user ? <Quiz /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/dashboard"
-            element={user ? <MainDashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/analytics"
-            element={user ? <Dashboard /> : <Navigate to="/login" />}
-          />
+          {/* All routes are now accessible without authentication */}
+          <Route path="/ask" element={<Ask />} />
+          <Route path="/quiz" element={<Quiz />} />
+          <Route path="/dashboard" element={<MainDashboard />} />
+          <Route path="/analytics" element={<Dashboard />} />
 
           {/* MasterLMS routes */}
-          <Route
-            path="/courses"
-            element={user ? <Courses /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/enrollments"
-            element={user ? <StudentEnrollments /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/my-assignments"
-            element={user ? <StudentAssignments /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/my-grades"
-            element={user ? <StudentGrades /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/academic-records"
-            element={
-              user ? <StudentAcademicRecords /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/course-materials"
-            element={
-              user ? <StudentCourseMaterials /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/course-playlist/:courseId"
-            element={
-              user ? <StudentCoursePlaylist /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/upload-materials/:courseId"
-            element={
-              user ? <LecturerUploadMaterials /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/discussions"
-            element={user ? <StudentDiscussions /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/student-assessments"
-            element={user ? <StudentAssessments /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/lecturer-course-management"
-            element={
-              user ? <LecturerCourseManagement /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/lecturer-assessments"
-            element={user ? <LecturerAssessments /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/my-courses"
-            element={user ? <LecturerCourses /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/my-courses/:courseId"
-            element={
-              user ? <LecturerCourseDetails /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/students"
-            element={user ? <StudentManagement /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/departments"
-            element={user ? <DepartmentManagement /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/departments/:departmentId"
-            element={user ? <DepartmentDetails /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/programs"
-            element={user ? <ProgramManagement /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/programs/:programId"
-            element={user ? <ProgramDetails /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/user-management"
-            element={user ? <UserManagement /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/assignments"
-            element={user ? <AssignmentManagement /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/course-management"
-            element={user ? <CourseManagement /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/course-analytics"
-            element={user ? <CourseAnalytics /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/campus-coordination"
-            element={user ? <CampusCoordination /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/profile"
-            element={user ? <UserProfile /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/settings"
-            element={user ? <Settings /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/my-programs"
-            element={user ? <LecturerPrograms /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/course-details"
-            element={user ? <CourseDetails /> : <Navigate to="/login" />}
-          />
-          <Route path="/courses/:courseId" element={
-            user ? <CourseDetails /> : <Navigate to="/login" />
-          } />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/enrollments" element={<StudentEnrollments />} />
+          <Route path="/my-assignments" element={<StudentAssignments />} />
+          <Route path="/my-grades" element={<StudentGrades />} />
+          <Route path="/academic-records" element={<StudentAcademicRecords />} />
+          <Route path="/course-materials" element={<StudentCourseMaterials />} />
+          <Route path="/course-playlist/:courseId" element={<StudentCoursePlaylist />} />
+          <Route path="/upload-materials/:courseId" element={<LecturerUploadMaterials />} />
+          <Route path="/discussions" element={<StudentDiscussions />} />
+          <Route path="/student-assessments" element={<StudentAssessments />} />
+          <Route path="/lecturer-course-management" element={<LecturerCourseManagement />} />
+          <Route path="/lecturer-assessments" element={<LecturerAssessments />} />
+          <Route path="/my-courses" element={<LecturerCourses />} />
+          <Route path="/my-courses/:courseId" element={<LecturerCourseDetails />} />
+          <Route path="/students" element={<StudentManagement />} />
+          <Route path="/departments" element={<DepartmentManagement />} />
+          <Route path="/departments/:departmentId" element={<DepartmentDetails />} />
+          <Route path="/programs" element={<ProgramManagement />} />
+          <Route path="/programs/:programId" element={<ProgramDetails />} />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/assignments" element={<AssignmentManagement />} />
+          <Route path="/course-management" element={<CourseManagement />} />
+          <Route path="/course-analytics" element={<CourseAnalytics />} />
+          <Route path="/campus-coordination" element={<CampusCoordination />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/my-programs" element={<LecturerPrograms />} />
+          <Route path="/course-details" element={<CourseDetails />} />
+          <Route path="/courses/:courseId" element={<CourseDetails />} />
         </Routes>
       </main>
     </div>

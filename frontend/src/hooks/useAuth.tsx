@@ -6,7 +6,6 @@ import {
   ReactNode,
 } from "react";
 import { User, AuthContextType } from "../types";
-import { apiClient } from "../api/client";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -20,8 +19,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      const userData = await apiClient.getCurrentUser();
-      setUser((userData as any).user);
+      // Check if there's a selected user in localStorage
+      const selectedUser = localStorage.getItem('selectedUser');
+      if (selectedUser) {
+        const userData = JSON.parse(selectedUser);
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
       setUser(null);
     } finally {
@@ -30,34 +35,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await apiClient.login(email, password);
-      if (!(response as any) || !(response as any).user) {
-        throw new Error("Login failed: Invalid credentials or server error.");
-      }
-      setUser((response as any).user);
-    } catch (error) {
-      setUser(null);
-      throw error;
-    }
+    // This function is kept for compatibility but won't be used
+    // Users will select roles from the home page instead
+    throw new Error("Please select a role from the home page");
   };
 
   const register = async (name: string, email: string, password: string) => {
-    try {
-      const response = await apiClient.register(name, email, password);
-      if (!(response as any) || !(response as any).user) {
-        throw new Error("Registration failed: Invalid data or server error.");
-      }
-      setUser((response as any).user);
-    } catch (error) {
-      setUser(null);
-      throw error;
-    }
+    // This function is kept for compatibility but won't be used
+    // Users will select roles from the home page instead
+    throw new Error("Please select a role from the home page");
   };
 
   const logout = async () => {
     try {
-      await apiClient.logout();
+      // Remove the selected user from localStorage
+      localStorage.removeItem('selectedUser');
       setUser(null);
     } catch (error) {
       setUser(null);

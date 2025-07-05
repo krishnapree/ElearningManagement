@@ -87,9 +87,7 @@ const CampusCoordination: React.FC = () => {
       setError(null);
 
       if (activeTab === "announcements") {
-        const response = await fetch("/api/announcements", {
-          credentials: "include",
-        });
+        const response = await fetch("/api/announcements");
 
         if (response.ok) {
           const data = await response.json();
@@ -98,9 +96,7 @@ const CampusCoordination: React.FC = () => {
           setError("Failed to fetch announcements");
         }
       } else {
-        const response = await fetch("/api/events", {
-          credentials: "include",
-        });
+        const response = await fetch("/api/events");
 
         if (response.ok) {
           const data = await response.json();
@@ -128,7 +124,6 @@ const CampusCoordination: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify({
           title: newAnnouncement.title,
           content: newAnnouncement.content,
@@ -182,7 +177,6 @@ const CampusCoordination: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify({
           title: newEvent.title,
           description: newEvent.description,

@@ -74,14 +74,14 @@ const AssignmentManagement: React.FC = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch("/api/assignments", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      // Get current user role from localStorage
+      const selectedUser = localStorage.getItem('selectedUser');
+      const userRole = selectedUser ? JSON.parse(selectedUser).role : 'admin';
+      
+      const response = await fetch(`/api/assignments?role=${userRole}`);
       if (response.ok) {
         const data = await response.json();
-        setAssignments(data);
+        setAssignments(data.assignments || data);
       }
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -92,11 +92,7 @@ const AssignmentManagement: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/courses", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch("/api/courses");
       if (response.ok) {
         const data = await response.json();
         setCourses(data);
@@ -109,12 +105,7 @@ const AssignmentManagement: React.FC = () => {
   const fetchSubmissions = async (assignmentId: number) => {
     try {
       const response = await fetch(
-        `/api/assignments/${assignmentId}/submissions`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `/api/assignments/${assignmentId}/submissions`
       );
       if (response.ok) {
         const data = await response.json();
@@ -132,7 +123,6 @@ const AssignmentManagement: React.FC = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(newAssignment),
       });
@@ -161,7 +151,6 @@ const AssignmentManagement: React.FC = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           grade: parseFloat(gradeForm.grade),

@@ -38,9 +38,7 @@ const LecturerPrograms: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/lecturer/programs`, {
-        credentials: "include",
-      });
+      const response = await fetch(`/api/lecturer/programs`);
 
       if (response.ok) {
         const data = await response.json();

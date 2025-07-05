@@ -1,6 +1,6 @@
 import os
 import json
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Request, Response, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import re
+from routers.academic import MOCK_COURSES
 
 # Load environment variables from .env file
 try:
@@ -99,7 +100,7 @@ def initialize_fresh_database():
 
 initialize_fresh_database()
 
-app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System")
+app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System (Demo Mode)")
 
 # Allow frontend origin(s)
 origins = [
@@ -114,7 +115,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Mount static files for video materials
 app.mount("/videos", StaticFiles(directory="uploads/videos"), name="videos")
@@ -286,26 +286,64 @@ async def submit_quiz(request: QuizAnswers, current_user: User = Depends(get_cur
 
 # Dashboard endpoint
 @app.get("/api/dashboard")
-async def get_dashboard_data(
-    range: str = "week",
-    pagination: PaginationParams = Depends(),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        data = quiz_service.get_dashboard_data(
-            db,
-            current_user.id,  # type: ignore
-            range,
-            page=pagination.page,
-            limit=pagination.limit
-        )
-        return data
-    except Exception as e:
-        logger.error(f"Dashboard data error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get dashboard data: {str(e)}")
-
-
+async def get_dashboard_data(role: str = "admin"):
+    """
+    Demo endpoint for dashboard - returns mock data for admin, lecturer, or student
+    """
+    if role == "lecturer":
+        return {
+            "current_semester": {"id": 1, "name": "Spring 2024", "year": 2024},
+            "courses": [
+                {"id": 101, "name": "Introduction to Programming", "code": "CS101", "credits": 3, "department": "Computer Science", "max_capacity": 50, "enrolled_count": 45, "available_spots": 5},
+                {"id": 102, "name": "Data Structures and Algorithms", "code": "CS201", "credits": 4, "department": "Computer Science", "max_capacity": 40, "enrolled_count": 38, "available_spots": 2}
+            ],
+            "pending_submissions": [
+                {"id": 1, "assignment": "HW 1", "student": "Alice Smith", "course": "CS101", "submitted_at": "2024-02-10T10:00:00", "is_late": False, "days_since_submission": 2},
+                {"id": 2, "assignment": "Project Proposal", "student": "Bob Smith", "course": "CS201", "submitted_at": "2024-02-09T15:00:00", "is_late": True, "days_since_submission": 3}
+            ],
+            "course_statistics": {
+                "total_courses": 2,
+                "total_students": 83,
+                "total_assignments": 7,
+                "average_class_size": 41.5
+            }
+        }
+    elif role == "student":
+        return {
+            "current_semester": {"id": 1, "name": "Spring 2024", "year": 2024},
+            "enrollments": [
+                {"id": 1, "course": {"id": 101, "name": "Introduction to Programming", "code": "CS101", "credits": 3, "lecturer": "Dr. Sarah Johnson"}, "status": "enrolled", "final_grade": "A", "attendance_percentage": 95},
+                {"id": 2, "course": {"id": 102, "name": "Data Structures and Algorithms", "code": "CS201", "credits": 4, "lecturer": "Dr. Michael Chen"}, "status": "enrolled", "final_grade": "B+", "attendance_percentage": 92}
+            ],
+            "upcoming_assignments": [
+                {"id": 1, "title": "HW 1: Variables & Data Types", "course": "Introduction to Programming", "course_code": "CS101", "due_date": "2024-03-10T23:59:00", "max_points": 100, "days_until_due": 2},
+                {"id": 2, "title": "Project Proposal", "course": "Data Structures and Algorithms", "course_code": "CS201", "due_date": "2024-03-15T23:59:00", "max_points": 100, "days_until_due": 7}
+            ],
+            "academic_progress": {"gpa": 3.78, "total_credits": 90, "credits_earned": 90, "completion_percentage": 75},
+            "total_courses": 2,
+            "completed_assignments": 12,
+            "recent_grades": [
+                {"assignment_title": "HW 1: Variables & Data Types", "course_name": "Introduction to Programming", "grade": 95, "max_points": 100, "percentage": 95, "graded_date": "2024-03-03"},
+                {"assignment_title": "Project Proposal", "course_name": "Data Structures and Algorithms", "grade": 88, "max_points": 100, "percentage": 88, "graded_date": "2024-03-07"}
+            ],
+            "course_progress": [
+                {"course_name": "Introduction to Programming", "progress": 80},
+                {"course_name": "Data Structures and Algorithms", "progress": 65}
+            ]
+        }
+    else:
+        # Admin mock data matching frontend expectations
+        return {
+            "total_students": 1172,
+            "total_lecturers": 25,
+            "total_courses": 42,
+            "total_departments": 6,
+            "total_programs": 12,
+            "current_semester": "Spring 2024",
+            "current_enrollments": 950,
+            "system_status": "All systems operational",
+            # Optionally add more fields if needed by the frontend
+        }
 
 # ============================================================================
 # MasterLMS Endpoints
@@ -920,86 +958,14 @@ async def delete_user(
 # ============================================================================
 
 @app.get("/api/enrollments")
-async def get_all_enrollments(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        # Only allow admins to get all enrollments
-        if current_user.role != UserRole.ADMIN:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        enrollments = db.query(Enrollment).all()
-
-        enrollment_list = []
-        for enrollment in enrollments:
-            enrollment_list.append({
-                "id": enrollment.id,
-                "student_id": enrollment.student_id,
-                "student_name": enrollment.student.name,
-                "course_id": enrollment.course_id,
-                "course_name": enrollment.course.name,
-                "course_code": enrollment.course.code,
-                "status": enrollment.status.value if hasattr(enrollment.status, 'value') else str(enrollment.status),
-                "enrollment_date": enrollment.enrollment_date.isoformat() if enrollment.enrollment_date else None,
-                "final_grade": enrollment.final_grade,
-                "is_active": enrollment.is_active
-            })
-
-        return {"enrollments": enrollment_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get enrollments: {str(e)}")
+async def get_all_enrollments():
+    return {"enrollments": MOCK_ENROLLMENTS}
 
 @app.post("/api/enrollments")
-async def create_enrollment(
-    request: dict,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        # Only allow admins to create enrollments
-        if current_user.role != UserRole.ADMIN:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        student_id = request.get("student_id")
-        course_id = request.get("course_id")
-
-        if not student_id or not course_id:
-            raise HTTPException(status_code=400, detail="student_id and course_id are required")
-
-        # Check if enrollment already exists
-        existing = db.query(Enrollment).filter(
-            Enrollment.student_id == student_id,
-            Enrollment.course_id == course_id
-        ).first()
-
-        if existing:
-            raise HTTPException(status_code=400, detail="Student is already enrolled in this course")
-
-        # Create enrollment
-        enrollment = Enrollment(
-            student_id=student_id,
-            course_id=course_id,
-            program_id=request.get("program_id", 1),  # Default to first program if not provided
-            status=EnrollmentStatus.ENROLLED,
-            enrollment_date=datetime.now(timezone.utc)
-        )
-
-        db.add(enrollment)
-        db.commit()
-        db.refresh(enrollment)
-
-        return {
-            "message": "Enrollment created successfully",
-            "enrollment": {
-                "id": enrollment.id,
-                "student_id": enrollment.student_id,
-                "course_id": enrollment.course_id,
-                "status": enrollment.status.value
-            }
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create enrollment: {str(e)}")
+async def create_enrollment(request: dict):
+    new_enrollment = {"id": len(MOCK_ENROLLMENTS)+1, **request}
+    MOCK_ENROLLMENTS.append(new_enrollment)
+    return {"enrollment": new_enrollment, "message": "Enrollment created successfully"}
 
 @app.put("/api/enrollments/{enrollment_id}")
 async def update_enrollment(
@@ -1034,25 +1000,77 @@ async def update_enrollment(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update enrollment: {str(e)}")
 
+@app.get("/api/submissions/{submission_id}")
+async def get_submission(submission_id: int):
+    for sub in MOCK_SUBMISSIONS:
+        if sub["id"] == submission_id:
+            return {"submission": sub}
+    raise HTTPException(status_code=404, detail="Submission not found")
+
+@app.post("/api/submissions")
+async def create_submission(request: dict):
+    new_submission = {"id": len(MOCK_SUBMISSIONS)+1, **request}
+    MOCK_SUBMISSIONS.append(new_submission)
+    return {"submission": new_submission, "message": "Submission created successfully"}
+
+@app.get("/api/quizzes/{quiz_id}")
+async def get_quiz(quiz_id: int):
+    for quiz in MOCK_QUIZZES:
+        if quiz["id"] == quiz_id:
+            return {"quiz": quiz}
+    raise HTTPException(status_code=404, detail="Quiz not found")
+
+@app.post("/api/quizzes")
+async def create_quiz(request: dict):
+    new_quiz = {"id": len(MOCK_QUIZZES)+1, **request}
+    MOCK_QUIZZES.append(new_quiz)
+    return {"quiz": new_quiz, "message": "Quiz created successfully"}
+
+@app.get("/api/forums/{forum_id}")
+async def get_forum(forum_id: int):
+    for forum in MOCK_FORUMS:
+        if forum["id"] == forum_id:
+            return {"forum": forum}
+    raise HTTPException(status_code=404, detail="Forum not found")
+
+@app.post("/api/forums")
+async def create_forum(request: dict):
+    new_forum = {"id": len(MOCK_FORUMS)+1, **request}
+    MOCK_FORUMS.append(new_forum)
+    return {"forum": new_forum, "message": "Forum created successfully"}
+
+@app.get("/api/messages/{message_id}")
+async def get_message(message_id: int):
+    for msg in MOCK_MESSAGES:
+        if msg["id"] == message_id:
+            return {"message": msg}
+    raise HTTPException(status_code=404, detail="Message not found")
+
+@app.post("/api/messages")
+async def create_message(request: dict):
+    new_message = {"id": len(MOCK_MESSAGES)+1, **request}
+    MOCK_MESSAGES.append(new_message)
+    return {"message": new_message, "message": "Message sent successfully"}
+
+@app.get("/api/notifications/{notification_id}")
+async def get_notification(notification_id: int):
+    for notif in MOCK_NOTIFICATIONS:
+        if notif["id"] == notification_id:
+            return {"notification": notif}
+    raise HTTPException(status_code=404, detail="Notification not found")
+
+@app.put("/api/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: int):
+    for notif in MOCK_NOTIFICATIONS:
+        if notif["id"] == notification_id:
+            notif["read"] = True
+            return {"notification": notif, "message": "Notification marked as read"}
+    raise HTTPException(status_code=404, detail="Notification not found")
+
 # Student-specific endpoints
 @app.get("/api/student/enrollments")
-async def get_student_enrollments(
-    semester_id: Optional[int] = None,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        logger.info(f"Fetching enrollments for student {current_user.id}")
-        enrollments = academic_service.get_student_enrollments(db, current_user.id, semester_id)
-        logger.info(f"Found {len(enrollments)} enrollments for student {current_user.id}")
-        
-        return {"enrollments": enrollments}
-    except Exception as e:
-        logger.error(f"Failed to get enrollments for student {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get enrollments: {str(e)}")
+async def get_student_enrollments():
+    return {"enrollments": MOCK_ENROLLMENTS}
 
 @app.post("/api/student/enroll")
 async def enroll_in_course(
@@ -1077,98 +1095,206 @@ async def enroll_in_course(
 
 # Lecturer-specific endpoints
 @app.get("/api/lecturer/courses")
-async def get_lecturer_courses(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.LECTURER:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        courses = academic_service.get_courses(db, lecturer_id=current_user.id)
-        return {"courses": courses}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get lecturer courses: {str(e)}")
+async def get_lecturer_courses():
+    return {"courses": MOCK_COURSES}
 
 @app.get("/api/lecturer/students")
-async def get_lecturer_students(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.LECTURER:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get all students enrolled in lecturer's courses
-        students = user_management_service.get_lecturer_students(db, current_user.id)
-        return {"users": students}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get lecturer students: {str(e)}")
+async def get_lecturer_students():
+    """
+    Demo endpoint for lecturer students - returns mock data
+    """
+    import datetime
+    
+    now = datetime.datetime.now().isoformat()
+    return {
+        "students": [
+            {
+                "id": 101,
+                "name": "Alice Johnson",
+                "email": "alice.johnson@student.edu",
+                "student_id": "STU2024001",
+                "program": "Computer Science",
+                "year": 2,
+                "gpa": 3.8,
+                "enrollment_date": "2023-09-01T00:00:00",
+                "status": "active",
+                "courses_enrolled": 5,
+                "assignments_completed": 12,
+                "last_activity": now
+            },
+            {
+                "id": 102,
+                "name": "Bob Smith",
+                "email": "bob.smith@student.edu",
+                "student_id": "STU2024002",
+                "program": "Computer Science",
+                "year": 3,
+                "gpa": 3.5,
+                "enrollment_date": "2022-09-01T00:00:00",
+                "status": "active",
+                "courses_enrolled": 4,
+                "assignments_completed": 8,
+                "last_activity": now
+            },
+            {
+                "id": 103,
+                "name": "Carol Davis",
+                "email": "carol.davis@student.edu",
+                "student_id": "STU2024003",
+                "program": "Computer Science",
+                "year": 1,
+                "gpa": 3.9,
+                "enrollment_date": "2024-09-01T00:00:00",
+                "status": "active",
+                "courses_enrolled": 3,
+                "assignments_completed": 6,
+                "last_activity": now
+            },
+            {
+                "id": 104,
+                "name": "David Wilson",
+                "email": "david.wilson@student.edu",
+                "student_id": "STU2024004",
+                "program": "Computer Science",
+                "year": 4,
+                "gpa": 3.7,
+                "enrollment_date": "2021-09-01T00:00:00",
+                "status": "active",
+                "courses_enrolled": 6,
+                "assignments_completed": 15,
+                "last_activity": now
+            },
+            {
+                "id": 105,
+                "name": "Eva Brown",
+                "email": "eva.brown@student.edu",
+                "student_id": "STU2024005",
+                "program": "Computer Science",
+                "year": 2,
+                "gpa": 3.6,
+                "enrollment_date": "2023-09-01T00:00:00",
+                "status": "active",
+                "courses_enrolled": 5,
+                "assignments_completed": 10,
+                "last_activity": now
+            }
+        ]
+    }
 
 @app.get("/api/lecturer/programs")
-async def get_lecturer_programs(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.LECTURER:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get programs where the lecturer is assigned (from ProgramLecturer table)
-        program_assignments = db.query(ProgramLecturer).filter(
-            ProgramLecturer.lecturer_id == current_user.id,
-            ProgramLecturer.is_active == True
-        ).all()
-        
-        program_list = []
-        for assignment in program_assignments:
-            program = assignment.program
-            
-            # Get ALL courses allocated to this program (not just courses the lecturer teaches)
-            program_courses = db.query(ProgramCourse).filter(
-                ProgramCourse.program_id == program.id,
-                ProgramCourse.is_active == True
-            ).all()
-            
-            # Get course details for each allocated course
-            courses = []
-            for program_course in program_courses:
-                course = program_course.course
-                courses.append({
-                    "id": course.id,
-                    "name": course.name,
-                    "code": course.code,
-                    "credits": course.credits,
-                    "is_required": program_course.is_required,
-                    "semester_order": program_course.semester_order,
-                    "lecturer_name": course.lecturer.name if course.lecturer else "TBA"
-                })
-            
-            # Get student count for this program
-            student_count = db.query(Enrollment).filter(
-                Enrollment.program_id == program.id,
-                Enrollment.status == EnrollmentStatus.ENROLLED,
-                Enrollment.is_active == True
-            ).count()
-            
-            program_list.append({
-                "id": program.id,
-                "name": program.name,
-                "code": program.code,
-                "description": program.description,
-                "department": program.department.name,
-                "duration": program.duration_years,
-                "total_credits": program.total_credits,
-                "courses": courses,
-                "student_count": student_count,
-                "created_at": program.created_at.isoformat(),
-                "assignment_role": assignment.role,
-                "assigned_at": assignment.assigned_at.isoformat()
-            })
-        
-        return {"programs": program_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get lecturer programs: {str(e)}")
+async def get_lecturer_programs():
+    """
+    Demo endpoint for lecturer programs - returns mock data
+    """
+    import datetime
+    
+    now = datetime.datetime.now().isoformat()
+    return {
+        "programs": [
+            {
+                "id": 1,
+                "name": "Bachelor of Computer Science",
+                "code": "BSCS",
+                "description": "A comprehensive program covering computer science fundamentals, programming, algorithms, and software engineering.",
+                "department": "Computer Science",
+                "duration_years": 4,
+                "total_credits": 120,
+                "student_count": 45,
+                "created_at": "2020-09-01T00:00:00",
+                "assignment_role": "coordinator",
+                "assigned_at": "2023-01-15T00:00:00",
+                "courses": [
+                    {
+                        "id": 101,
+                        "name": "Introduction to Programming",
+                        "code": "CS101",
+                        "credits": 3,
+                        "is_required": True,
+                        "semester_order": 1,
+                        "lecturer_name": "Dr. Sarah Johnson"
+                    },
+                    {
+                        "id": 102,
+                        "name": "Data Structures and Algorithms",
+                        "code": "CS201",
+                        "credits": 4,
+                        "is_required": True,
+                        "semester_order": 2,
+                        "lecturer_name": "Dr. Michael Chen"
+                    },
+                    {
+                        "id": 103,
+                        "name": "Database Systems",
+                        "code": "CS301",
+                        "credits": 3,
+                        "is_required": True,
+                        "semester_order": 3,
+                        "lecturer_name": "Dr. Emily Davis"
+                    },
+                    {
+                        "id": 104,
+                        "name": "Software Engineering",
+                        "code": "CS401",
+                        "credits": 4,
+                        "is_required": True,
+                        "semester_order": 4,
+                        "lecturer_name": "Dr. Robert Wilson"
+                    },
+                    {
+                        "id": 105,
+                        "name": "Computer Networks",
+                        "code": "CS302",
+                        "credits": 3,
+                        "is_required": False,
+                        "semester_order": 3,
+                        "lecturer_name": "Dr. Lisa Thompson"
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "name": "Master of Computer Science",
+                "code": "MSCS",
+                "description": "Advanced program focusing on research, advanced algorithms, and specialized computer science topics.",
+                "department": "Computer Science",
+                "duration_years": 2,
+                "total_credits": 60,
+                "student_count": 18,
+                "created_at": "2021-09-01T00:00:00",
+                "assignment_role": "advisor",
+                "assigned_at": "2023-06-01T00:00:00",
+                "courses": [
+                    {
+                        "id": 201,
+                        "name": "Advanced Algorithms",
+                        "code": "CS501",
+                        "credits": 4,
+                        "is_required": True,
+                        "semester_order": 1,
+                        "lecturer_name": "Dr. James Anderson"
+                    },
+                    {
+                        "id": 202,
+                        "name": "Machine Learning",
+                        "code": "CS502",
+                        "credits": 4,
+                        "is_required": True,
+                        "semester_order": 1,
+                        "lecturer_name": "Dr. Maria Garcia"
+                    },
+                    {
+                        "id": 203,
+                        "name": "Research Methods",
+                        "code": "CS503",
+                        "credits": 3,
+                        "is_required": True,
+                        "semester_order": 2,
+                        "lecturer_name": "Dr. Thomas Lee"
+                    }
+                ]
+            }
+        ]
+    }
 
 # ============================================================================
 # Course Management API Endpoints
@@ -1334,60 +1460,100 @@ async def delete_course(
 # Assignment Management API Endpoints
 # ============================================================================
 
+@app.get("/api/courses")
+async def get_courses_demo():
+    """
+    Demo endpoint for courses - returns mock data
+    """
+    return [
+        {"id": "1", "code": "CS101", "name": "Introduction to Computer Science"},
+        {"id": "2", "code": "MATH201", "name": "Advanced Mathematics"},
+        {"id": "3", "code": "ENG101", "name": "English Composition"},
+        {"id": "4", "code": "PHYS101", "name": "Physics Fundamentals"},
+        {"id": "5", "code": "CHEM101", "name": "Chemistry Basics"}
+    ]
+
 @app.get("/api/assignments")
 async def get_assignments(
     course_id: Optional[int] = None,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    role: str = Query("admin")
 ):
-    try:
-        query = db.query(Assignment)
-
-        if current_user.role == UserRole.LECTURER:
-            # Get assignments for lecturer's courses
-            lecturer_courses = db.query(Course).filter(Course.lecturer_id == current_user.id).all()
-            course_ids = [course.id for course in lecturer_courses]
-            query = query.filter(Assignment.course_id.in_(course_ids))
-        elif current_user.role == UserRole.STUDENT:
-            # Get assignments for student's enrolled courses
-            enrollments = db.query(Enrollment).filter(Enrollment.student_id == current_user.id).all()
-            course_ids = [enrollment.course_id for enrollment in enrollments]
-            query = query.filter(Assignment.course_id.in_(course_ids))
-
-        if course_id:
-            query = query.filter(Assignment.course_id == course_id)
-
-        assignments = query.order_by(Assignment.due_date.desc()).all()
-
-        assignment_list = []
-        for assignment in assignments:
-            submission_count = db.query(AssignmentSubmission).filter(
-                AssignmentSubmission.assignment_id == assignment.id
-            ).count()
-
-            graded_count = db.query(AssignmentSubmission).filter(
-                AssignmentSubmission.assignment_id == assignment.id,
-                AssignmentSubmission.grade.isnot(None)
-            ).count()
-
-            assignment_list.append({
-                "id": assignment.id,
-                "title": assignment.title,
-                "description": assignment.description,
-                "course_id": assignment.course_id,
-                "course_name": assignment.course.name,
-                "course_code": assignment.course.code,
-                "due_date": assignment.due_date.isoformat(),
-                "max_points": assignment.max_points,
-                "assignment_type": assignment.assignment_type,
-                "is_published": assignment.is_published,
-                "submission_count": submission_count,
-                "graded_count": graded_count
-            })
-
-        return {"assignments": assignment_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get assignments: {str(e)}")
+    """
+    Portfolio/demo mode: Always return mock assignments for admin, lecturer, and student roles.
+    """
+    import datetime
+    
+    # Mock assignments data
+    def mock_assignments(role):
+        now = datetime.datetime.now().isoformat()
+        if role == "admin":
+            return [
+                {
+                    "id": 1,
+                    "title": "Admin Assignment 1",
+                    "description": "Review all course assignments.",
+                    "course_id": 101,
+                    "course_name": "All Courses",
+                    "course_code": "ALL-ADMIN",
+                    "due_date": now,
+                    "max_points": 100,
+                    "assignment_type": "review",
+                    "is_published": True,
+                    "submission_count": 10,
+                    "graded_count": 8
+                },
+                {
+                    "id": 2,
+                    "title": "Admin Assignment 2",
+                    "description": "Audit assignment submissions.",
+                    "course_id": 102,
+                    "course_name": "Audit Course",
+                    "course_code": "AUD-ADMIN",
+                    "due_date": now,
+                    "max_points": 50,
+                    "assignment_type": "audit",
+                    "is_published": True,
+                    "submission_count": 5,
+                    "graded_count": 5
+                }
+            ]
+        elif role == "lecturer":
+            return [
+                {
+                    "id": 3,
+                    "title": "Lecturer Assignment 1",
+                    "description": "Grade student projects.",
+                    "course_id": 201,
+                    "course_name": "Software Engineering",
+                    "course_code": "SE-101",
+                    "due_date": now,
+                    "max_points": 100,
+                    "assignment_type": "project",
+                    "is_published": True,
+                    "submission_count": 20,
+                    "graded_count": 15
+                }
+            ]
+        else:  # student
+            return [
+                {
+                    "id": 4,
+                    "title": "Student Assignment 1",
+                    "description": "Submit your essay.",
+                    "course_id": 301,
+                    "course_name": "English Literature",
+                    "course_code": "ENG-201",
+                    "due_date": now,
+                    "max_points": 20,
+                    "assignment_type": "essay",
+                    "is_published": True,
+                    "submission_count": 1,
+                    "graded_count": 0
+                }
+            ]
+    
+    assignments = mock_assignments(role)
+    return {"assignments": assignments}
 
 @app.post("/api/assignments")
 async def create_assignment(
@@ -1448,71 +1614,55 @@ async def create_assignment(
         raise HTTPException(status_code=500, detail=f"Failed to create assignment: {str(e)}")
 
 @app.get("/api/assignments/{assignment_id}/submissions")
-async def get_assignment_submissions(
-    assignment_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-        if not assignment:
-            raise HTTPException(status_code=404, detail="Assignment not found")
-
-        # Check permissions
-        if current_user.role == UserRole.LECTURER and assignment.course.lecturer_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Access denied")
-        elif current_user.role not in [UserRole.ADMIN, UserRole.LECTURER]:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        submissions = db.query(AssignmentSubmission).filter(
-            AssignmentSubmission.assignment_id == assignment_id
-        ).all()
-
-        submission_list = []
-        for submission in submissions:
-            submission_list.append({
-                "id": submission.id,
-                "student_id": submission.student_id,
-                "student_name": submission.student.name,
-                "student_email": submission.student.email,
-                "submitted_at": submission.submitted_at.isoformat(),
-                "grade": submission.grade,
-                "feedback": submission.feedback,
-                "is_late": submission.is_late,
-                "file_url": submission.file_url
-            })
-
-        return {"submissions": submission_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get submissions: {str(e)}")
+async def get_assignment_submissions_demo(assignment_id: int):
+    """
+    Demo endpoint for assignment submissions - returns mock data
+    """
+    import datetime
+    
+    now = datetime.datetime.now().isoformat()
+    return [
+        {
+            "id": 1,
+            "student_id": 101,
+            "student_name": "John Doe",
+            "student_email": "john.doe@example.com",
+            "submitted_at": now,
+            "grade": 85,
+            "feedback": "Good work, but could improve on citations.",
+            "is_late": False,
+            "file_url": "/uploads/submissions/assignment1_john_doe.pdf"
+        },
+        {
+            "id": 2,
+            "student_id": 102,
+            "student_name": "Jane Smith",
+            "student_email": "jane.smith@example.com",
+            "submitted_at": now,
+            "grade": 92,
+            "feedback": "Excellent work! Very thorough analysis.",
+            "is_late": False,
+            "file_url": "/uploads/submissions/assignment1_jane_smith.pdf"
+        },
+        {
+            "id": 3,
+            "student_id": 103,
+            "student_name": "Mike Johnson",
+            "student_email": "mike.johnson@example.com",
+            "submitted_at": now,
+            "grade": None,
+            "feedback": None,
+            "is_late": True,
+            "file_url": "/uploads/submissions/assignment1_mike_johnson.pdf"
+        }
+    ]
 
 @app.put("/api/submissions/{submission_id}/grade")
-async def grade_submission(
-    submission_id: int,
-    request: dict,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        submission = db.query(AssignmentSubmission).filter(AssignmentSubmission.id == submission_id).first()
-        if not submission:
-            raise HTTPException(status_code=404, detail="Submission not found")
-
-        # Check permissions
-        if current_user.role == UserRole.LECTURER and submission.assignment.course.lecturer_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Access denied")
-        elif current_user.role not in [UserRole.ADMIN, UserRole.LECTURER]:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        submission.grade = request.get("grade")
-        submission.feedback = request.get("feedback", "")
-        submission.graded_at = datetime.now(timezone.utc)
-        submission.graded_by_id = current_user.id
-
-        db.commit()
-        return {"message": "Submission graded successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to grade submission: {str(e)}")
+async def grade_submission_demo(submission_id: int, request: dict):
+    """
+    Demo endpoint for grading submissions - always returns success
+    """
+    return {"message": "Submission graded successfully"}
 
 # ============================================================================
 # File Upload System for Course Materials
@@ -2311,49 +2461,56 @@ async def lock_thread(
 # ============================================================================
 
 @app.get("/api/lecturer/quizzes")
-async def get_lecturer_quizzes(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.LECTURER:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get all quizzes created by this lecturer
-        quizzes = db.query(Quiz).filter(
-            Quiz.created_by_id == current_user.id,
-            Quiz.is_active == True
-        ).all()
-
-        quiz_list = []
-        for quiz in quizzes:
-            # Count questions
-            questions_count = db.query(QuizQuestion).filter(
-                QuizQuestion.quiz_id == quiz.id
-            ).count()
-
-            # Count attempts
-            attempts_count = db.query(StudentQuizAttempt).filter(
-                StudentQuizAttempt.quiz_id == quiz.id
-            ).count()
-
-            quiz_list.append({
-                "id": quiz.id,
-                "title": quiz.title,
-                "description": quiz.description,
-                "course_id": quiz.course_id,
-                "course_name": quiz.course.name,
-                "questions_count": questions_count,
-                "time_limit": quiz.time_limit,
-                "max_attempts": quiz.max_attempts,
-                "is_published": quiz.is_published,
-                "created_at": quiz.created_at.isoformat(),
-                "attempts_count": attempts_count
-            })
-
-        return {"quizzes": quiz_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get quizzes: {str(e)}")
+async def get_lecturer_quizzes():
+    """
+    Demo endpoint for lecturer quizzes - returns mock data
+    """
+    import datetime
+    
+    now = datetime.datetime.now().isoformat()
+    return {
+        "quizzes": [
+            {
+                "id": 1,
+                "title": "Introduction to Programming Quiz",
+                "description": "Basic concepts of programming and algorithms",
+                "course_id": 101,
+                "course_name": "Introduction to Programming",
+                "questions_count": 15,
+                "time_limit": 30,
+                "max_attempts": 3,
+                "is_published": True,
+                "created_at": "2024-01-15T00:00:00",
+                "attempts_count": 45
+            },
+            {
+                "id": 2,
+                "title": "Data Structures Midterm",
+                "description": "Comprehensive test on arrays, linked lists, and trees",
+                "course_id": 102,
+                "course_name": "Data Structures and Algorithms",
+                "questions_count": 25,
+                "time_limit": 60,
+                "max_attempts": 2,
+                "is_published": True,
+                "created_at": "2024-02-01T00:00:00",
+                "attempts_count": 38
+            },
+            {
+                "id": 3,
+                "title": "Database Fundamentals",
+                "description": "SQL queries, normalization, and database design",
+                "course_id": 103,
+                "course_name": "Database Systems",
+                "questions_count": 20,
+                "time_limit": 45,
+                "max_attempts": 3,
+                "is_published": False,
+                "created_at": "2024-02-10T00:00:00",
+                "attempts_count": 0
+            }
+        ]
+    }
 
 @app.post("/api/quizzes")
 async def create_quiz(
@@ -2391,130 +2548,157 @@ async def create_quiz(
         raise HTTPException(status_code=500, detail=f"Failed to create quiz: {str(e)}")
 
 @app.get("/api/lecturer/assignments")
-async def get_lecturer_assignments(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.LECTURER:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get all assignments for courses taught by this lecturer
-        assignments = db.query(Assignment).join(Course).filter(
-            Course.lecturer_id == current_user.id,
-            Assignment.course_id == Course.id
-        ).all()
-
-        assignment_list = []
-        for assignment in assignments:
-            # Count submissions
-            submission_count = db.query(AssignmentSubmission).filter(
-                AssignmentSubmission.assignment_id == assignment.id
-            ).count()
-
-            graded_count = db.query(AssignmentSubmission).filter(
-                AssignmentSubmission.assignment_id == assignment.id,
-                AssignmentSubmission.grade.isnot(None)
-            ).count()
-
-            assignment_list.append({
-                "id": assignment.id,
-                "title": assignment.title,
-                "description": assignment.description,
-                "course_id": assignment.course_id,
-                "course_name": assignment.course.name,
-                "course_code": assignment.course.code,
-                "due_date": assignment.due_date.isoformat(),
-                "max_points": assignment.max_points,
-                "assignment_type": assignment.assignment_type,
-                "is_published": assignment.is_published,
-                "submission_count": submission_count,
-                "graded_count": graded_count
-            })
-
-        return {"assignments": assignment_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get assignments: {str(e)}")
+async def get_lecturer_assignments():
+    return {"assignments": MOCK_ASSIGNMENTS}
 
 # ============================================================================
 # Communication System API Endpoints
 # ============================================================================
 
+@app.get("/api/announcements")
+async def get_announcements():
+    """
+    Demo endpoint for announcements - returns mock data
+    """
+    import datetime
+    
+    now = datetime.datetime.now().isoformat()
+    return {
+        "announcements": [
+            {
+                "id": 1,
+                "title": "Welcome to EduFlow LMS!",
+                "content": "Welcome to our new Learning Management System. We're excited to provide you with an enhanced learning experience.",
+                "type": "news",
+                "priority": "high",
+                "author": "Admin Team",
+                "department": "IT Department",
+                "target_audience": ["students", "lecturers", "staff"],
+                "event_date": None,
+                "event_location": None,
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now
+            },
+            {
+                "id": 2,
+                "title": "Campus Maintenance Notice",
+                "content": "Scheduled maintenance will be performed on the library systems this weekend. Please plan accordingly.",
+                "type": "alert",
+                "priority": "medium",
+                "author": "Facilities Management",
+                "department": "Facilities",
+                "target_audience": ["students", "staff"],
+                "event_date": None,
+                "event_location": "Library",
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now
+            },
+            {
+                "id": 3,
+                "title": "Academic Excellence Awards Ceremony",
+                "content": "Join us for the annual Academic Excellence Awards ceremony to celebrate outstanding student achievements.",
+                "type": "event",
+                "priority": "high",
+                "author": "Academic Affairs",
+                "department": "Academic Affairs",
+                "target_audience": ["students", "lecturers", "parents"],
+                "event_date": "2025-01-15T18:00:00",
+                "event_location": "Main Auditorium",
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now
+            }
+        ]
+    }
+
 @app.post("/api/announcements")
-async def create_announcement(
-    request: dict,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        title = request.get("title")
-        content = request.get("content")
-        target_audience = request.get("target_audience", "all")
-        course_id = request.get("course_id")
-        is_urgent = request.get("is_urgent", False)
-
-        if not title or not content:
-            raise HTTPException(status_code=400, detail="Title and content are required")
-
-        result = communication_service.create_announcement(
-            db, title, content, current_user.id, target_audience, course_id, is_urgent
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create announcement: {str(e)}")
+async def create_announcement(request: dict):
+    """
+    Demo endpoint for creating announcements - always returns success
+    """
+    return {"announcement": {"id": 999, **request}, "message": "Announcement created successfully"}
 
 @app.get("/api/events")
-async def get_events(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        # Get real events from database using communication service
-        events = communication_service.get_events(db, current_user.id)
-        return {"events": events}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get events: {str(e)}")
+async def get_events():
+    """
+    Demo endpoint for events - returns mock data
+    """
+    import datetime
+    
+    now = datetime.datetime.now().isoformat()
+    return {
+        "events": [
+            {
+                "id": 1,
+                "title": "Academic Excellence Awards Ceremony",
+                "description": "Annual ceremony to celebrate outstanding student achievements and academic excellence.",
+                "event_date": "2025-01-15",
+                "event_time": "18:00",
+                "location": "Main Auditorium",
+                "organizer": "Academic Affairs",
+                "department": "Academic Affairs",
+                "max_attendees": 500,
+                "registered_count": 320,
+                "is_public": True,
+                "status": "upcoming",
+                "created_at": now
+            },
+            {
+                "id": 2,
+                "title": "Faculty Development Workshop",
+                "description": "Workshop on innovative teaching methodologies and modern educational technologies.",
+                "event_date": "2025-01-20",
+                "event_time": "09:00",
+                "location": "Conference Room A",
+                "organizer": "Teaching Excellence Center",
+                "department": "Academic Development",
+                "max_attendees": 50,
+                "registered_count": 45,
+                "is_public": False,
+                "status": "upcoming",
+                "created_at": now
+            },
+            {
+                "id": 3,
+                "title": "Student Career Fair",
+                "description": "Connect with potential employers and explore career opportunities in various industries.",
+                "event_date": "2025-02-10",
+                "event_time": "10:00",
+                "location": "Student Center",
+                "organizer": "Career Services",
+                "department": "Student Affairs",
+                "max_attendees": 300,
+                "registered_count": 280,
+                "is_public": True,
+                "status": "upcoming",
+                "created_at": now
+            },
+            {
+                "id": 4,
+                "title": "Campus Sports Tournament",
+                "description": "Annual inter-department sports tournament featuring basketball, soccer, and volleyball.",
+                "event_date": "2025-01-25",
+                "event_time": "14:00",
+                "location": "Sports Complex",
+                "organizer": "Student Activities",
+                "department": "Student Affairs",
+                "max_attendees": 200,
+                "registered_count": 150,
+                "is_public": True,
+                "status": "upcoming",
+                "created_at": now
+            }
+        ]
+    }
 
 @app.post("/api/events")
-async def create_event(
-    request: dict,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        # Allow Admin, Lecturer, and Staff to create events
-        if current_user.role not in [UserRole.ADMIN, UserRole.LECTURER]:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        title = request.get("title")
-        description = request.get("description")
-        event_date = request.get("event_date")
-        location = request.get("location")
-        event_type = request.get("type", "general")
-
-        if not all([title, description, event_date, location]):
-            raise HTTPException(status_code=400, detail="Title, description, event_date, and location are required")
-
-        # Create real event in database using communication service
-        result = communication_service.create_event(
-            db, title, description, event_date, location, current_user.id, event_type
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create event: {str(e)}")
-
-@app.get("/api/announcements")
-async def get_announcements(
-    course_id: Optional[int] = None,
-    limit: int = 20,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        announcements = communication_service.get_announcements(db, current_user.id, course_id, limit)
-        return {"announcements": announcements}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get announcements: {str(e)}")
+async def create_event(request: dict):
+    """
+    Demo endpoint for creating events - always returns success
+    """
+    return {"event": {"id": 999, **request}, "message": "Event created successfully"}
 
 @app.post("/api/messages")
 async def send_message(
@@ -2692,261 +2876,236 @@ async def get_student_courses(
         raise HTTPException(status_code=500, detail=f"Failed to get student courses: {str(e)}")
 
 @app.get("/api/student/enrolled-courses")
-async def get_student_enrolled_courses(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get courses the student is enrolled in with more details
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == current_user.id,
-            Enrollment.status == EnrollmentStatus.ENROLLED
-        ).all()
-
-        courses = []
-        for enrollment in enrollments:
-            course = enrollment.course
-            courses.append({
-                "id": course.id,
-                "name": course.name,
-                "code": course.code,
-                "description": course.description,
-                "credits": course.credits,
-                "lecturer_name": course.lecturer.name if course.lecturer else "TBA",
-                "enrollment_date": enrollment.enrollment_date.isoformat() if enrollment.enrollment_date else None,
-                "current_grade": enrollment.current_grade
-            })
-
-        return {"courses": courses}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get enrolled courses: {str(e)}")
+async def get_student_enrolled_courses():
+    """
+    Demo endpoint for student's enrolled courses - returns mock data
+    """
+    return {
+        "courses": [
+            {
+                "id": 101,
+                "name": "Introduction to Programming",
+                "code": "CS101",
+                "lecturer": "Dr. Sarah Johnson"
+            },
+            {
+                "id": 102,
+                "name": "Data Structures and Algorithms",
+                "code": "CS201",
+                "lecturer": "Dr. Michael Chen"
+            },
+            {
+                "id": 103,
+                "name": "Database Systems",
+                "code": "CS301",
+                "lecturer": "Dr. Emily Davis"
+            }
+        ]
+    }
 
 @app.get("/api/student/academic-record")
-async def get_student_academic_record(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get student's academic record
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == current_user.id
-        ).all()
-
-        total_credits = sum(enrollment.course.credits for enrollment in enrollments if enrollment.course)
-        completed_courses = len([e for e in enrollments if e.status == EnrollmentStatus.COMPLETED])
-
-        # Calculate GPA (mock calculation)
-        grades = [e.current_grade for e in enrollments if e.current_grade]
-        gpa = sum(grades) / len(grades) if grades else 0.0
-
-        record = {
-            "student_id": current_user.student_id,
-            "name": current_user.name,
-            "email": current_user.email,
-            "total_credits": total_credits,
-            "completed_courses": completed_courses,
-            "current_gpa": round(gpa, 2),
-            "academic_standing": "Good Standing" if gpa >= 2.0 else "Academic Probation",
-            "enrollment_date": current_user.created_at.isoformat(),
-            "expected_graduation": "2025-05-15"  # Mock data
-        }
-
-        return {"record": record}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get academic record: {str(e)}")
-
-@app.get("/api/student/transcript")
-async def get_student_transcript(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get student's transcript
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == current_user.id
-        ).all()
-
-        transcript_courses = []
-        for enrollment in enrollments:
-            course = enrollment.course
-            transcript_courses.append({
-                "course_code": course.code,
-                "course_name": course.name,
-                "credits": course.credits,
-                "grade": enrollment.current_grade or "IP",  # IP = In Progress
-                "semester": course.semester.name if course.semester else "N/A",
-                "year": course.semester.year if course.semester else 2024
-            })
-
-        # Calculate totals
-        total_credits = sum(course["credits"] for course in transcript_courses)
-        grades = [course["grade"] for course in transcript_courses if isinstance(course["grade"], (int, float))]
-        gpa = sum(grades) / len(grades) if grades else 0.0
-
-        transcript = {
+async def get_student_academic_record():
+    """
+    Demo endpoint for student academic record - returns mock data in the structure expected by the frontend, including degree_progress
+    """
+    return {
+        "record": {
             "student_info": {
-                "student_id": current_user.student_id,
-                "name": current_user.name,
-                "email": current_user.email
+                "name": "Alice Smith",
+                "student_id": "STU2024001",
+                "email": "alice.smith@student.edu",
+                "program": "Bachelor of Computer Science",
+                "department": "Computer Science",
+                "admission_date": "2021-09-01",
+                "expected_graduation": "2025-05-15",
+                "academic_standing": "Good Standing"
             },
-            "courses": transcript_courses,
-            "summary": {
-                "total_credits": total_credits,
-                "cumulative_gpa": round(gpa, 2),
-                "academic_standing": "Good Standing" if gpa >= 2.0 else "Academic Probation"
+            "overall_gpa": 3.78,
+            "total_credits_earned": 90,
+            "total_credits_attempted": 96,
+            "cumulative_gpa": 3.78,
+            "degree_progress": {
+                "total_credits_required": 120,
+                "credits_completed": 90,
+                "credits_in_progress": 6,
+                "percentage_complete": 75,
+                "core_courses": [
+                    {"course_code": "CS101", "name": "Intro to Programming", "status": "completed"},
+                    {"course_code": "CS201", "name": "Data Structures", "status": "completed"},
+                    {"course_code": "CS301", "name": "Database Systems", "status": "completed"},
+                    {"course_code": "CS401", "name": "Software Engineering", "status": "in_progress"}
+                ],
+                "electives": [
+                    {"course_code": "MATH201", "name": "Discrete Math", "status": "completed"},
+                    {"course_code": "ENG101", "name": "English Composition", "status": "completed"},
+                    {"course_code": "PHY101", "name": "Physics I", "status": "not_started"}
+                ]
             }
         }
+    }
 
-        return {"transcript": transcript}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get transcript: {str(e)}")
+@app.get("/api/student/transcript")
+async def get_student_transcript():
+    """
+    Demo endpoint for student transcript - returns mock data in the structure expected by the frontend
+    """
+    return {
+        "transcript": {
+            "semesters": [
+                {
+                    "semester_id": 1,
+                    "semester_name": "Fall",
+                    "year": 2021,
+                    "semester_gpa": 3.8,
+                    "credits_earned": 15,
+                    "credits_attempted": 15,
+                    "courses": [
+                        {
+                            "course_code": "CS101",
+                            "course_name": "Introduction to Programming",
+                            "credits": 3,
+                            "grade": "A",
+                            "grade_points": 4.0,
+                            "instructor": "Dr. Sarah Johnson",
+                            "final_percentage": 95
+                        },
+                        {
+                            "course_code": "MATH101",
+                            "course_name": "Calculus I",
+                            "credits": 4,
+                            "grade": "A-",
+                            "grade_points": 3.7,
+                            "instructor": "Dr. Emily Davis",
+                            "final_percentage": 91
+                        }
+                    ]
+                },
+                {
+                    "semester_id": 2,
+                    "semester_name": "Spring",
+                    "year": 2022,
+                    "semester_gpa": 3.7,
+                    "credits_earned": 15,
+                    "credits_attempted": 15,
+                    "courses": [
+                        {
+                            "course_code": "CS201",
+                            "course_name": "Data Structures and Algorithms",
+                            "credits": 4,
+                            "grade": "B+",
+                            "grade_points": 3.3,
+                            "instructor": "Dr. Michael Chen",
+                            "final_percentage": 88
+                        },
+                        {
+                            "course_code": "ENG101",
+                            "course_name": "English Composition",
+                            "credits": 3,
+                            "grade": "A",
+                            "grade_points": 4.0,
+                            "instructor": "Dr. Lisa Thompson",
+                            "final_percentage": 94
+                        }
+                    ]
+                }
+            ],
+            "academic_summary": {
+                "cumulative_gpa": 3.78,
+                "total_credits": 90,
+                "major_gpa": 3.85,
+                "academic_standing": "Good Standing",
+                "honors": ["Dean's List", "Academic Excellence"]
+            }
+        }
+    }
 
 @app.get("/api/student/quizzes")
-async def get_student_quizzes(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get quizzes for courses the student is enrolled in
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == current_user.id
-        ).all()
-
-        course_ids = [enrollment.course_id for enrollment in enrollments]
-
-        quizzes = db.query(Quiz).filter(
-            Quiz.course_id.in_(course_ids),
-            Quiz.is_published == True,
-            Quiz.is_active == True
-        ).all()
-
-        quiz_list = []
-        for quiz in quizzes:
-            # Count questions
-            questions_count = db.query(QuizQuestion).filter(
-                QuizQuestion.quiz_id == quiz.id
-            ).count()
-
-            # Get student's attempts
-            attempts = db.query(StudentQuizAttempt).filter(
-                StudentQuizAttempt.quiz_id == quiz.id,
-                StudentQuizAttempt.user_id == current_user.id
-            ).all()
-
-            my_attempts = len(attempts)
-            best_score = max([attempt.score for attempt in attempts]) if attempts else None
-            last_attempt_date = max([attempt.completed_at for attempt in attempts]) if attempts else None
-
-            # Determine status
-            status = 'available'
-            if my_attempts >= quiz.max_attempts:
-                status = 'completed'
-            elif best_score is not None:
-                status = 'completed'
-
-            quiz_list.append({
-                "id": quiz.id,
-                "title": quiz.title,
-                "description": quiz.description,
-                "course_id": quiz.course_id,
-                "course_name": quiz.course.name,
-                "course_code": quiz.course.code,
-                "time_limit": quiz.time_limit,
-                "max_attempts": quiz.max_attempts,
-                "is_published": quiz.is_published,
-                "created_at": quiz.created_at.isoformat(),
-                "questions_count": questions_count,
-                "my_attempts": my_attempts,
-                "best_score": best_score,
-                "last_attempt_date": last_attempt_date.isoformat() if last_attempt_date else None,
-                "status": status
-            })
-
-        return {"quizzes": quiz_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get student quizzes: {str(e)}")
+async def get_student_quizzes():
+    return {
+        "quizzes": [
+            {
+                "id": 1,
+                "title": "Quiz 1: Basics",
+                "description": "Covers variables and data types.",
+                "course_id": 101,
+                "course_name": "Introduction to Programming",
+                "course_code": "CS101",
+                "time_limit": 30,
+                "max_attempts": 3,
+                "is_published": True,
+                "questions_count": 10,
+                "my_attempts": 1,
+                "best_score": 92,
+                "last_attempt_date": "2024-03-05T10:00:00",
+                "status": "completed"
+            },
+            {
+                "id": 2,
+                "title": "Quiz 2: Control Flow",
+                "description": "Covers if/else and loops.",
+                "course_id": 101,
+                "course_name": "Introduction to Programming",
+                "course_code": "CS101",
+                "time_limit": 30,
+                "max_attempts": 3,
+                "is_published": True,
+                "questions_count": 10,
+                "my_attempts": 0,
+                "best_score": None,
+                "last_attempt_date": None,
+                "status": "available"
+            }
+        ]
+    }
 
 @app.get("/api/student/assignments")
-async def get_student_assignments(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get assignments for courses the student is enrolled in
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == current_user.id
-        ).all()
-
-        course_ids = [enrollment.course_id for enrollment in enrollments]
-
-        assignments = db.query(Assignment).filter(
-            Assignment.course_id.in_(course_ids),
-            Assignment.is_published == True
-        ).order_by(Assignment.due_date.asc()).all()
-
-        assignment_list = []
-        for assignment in assignments:
-            # Get student's submission
-            submission = db.query(AssignmentSubmission).filter(
-                AssignmentSubmission.assignment_id == assignment.id,
-                AssignmentSubmission.student_id == current_user.id
-            ).first()
-
-            # Determine status
-            status = 'pending'
-            if submission:
-                if submission.grade is not None:
-                    status = 'graded'
-                else:
-                    status = 'submitted'
-            elif assignment.due_date and datetime.now() > assignment.due_date:
-                status = 'overdue'
-
-            my_submission = None
-            if submission:
-                my_submission = {
-                    "id": submission.id,
-                    "submitted_at": submission.submitted_at.isoformat(),
-                    "grade": submission.grade,
-                    "feedback": submission.feedback,
-                    "file_path": submission.file_url
-                }
-
-            assignment_list.append({
-                "id": assignment.id,
-                "title": assignment.title,
-                "description": assignment.description,
-                "course_id": assignment.course_id,
-                "course_name": assignment.course.name,
-                "course_code": assignment.course.code,
-                "due_date": assignment.due_date.isoformat(),
-                "max_points": assignment.max_points,
-                "assignment_type": assignment.assignment_type,
-                "instructions": assignment.instructions,
-                "is_published": assignment.is_published,
-                "created_at": assignment.created_at.isoformat(),
-                "my_submission": my_submission,
-                "status": status
-            })
-
-        return {"assignments": assignment_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get student assignments: {str(e)}")
+async def get_student_assignments():
+    return {
+        "assignments": [
+            {
+                "id": 1,
+                "title": "HW 1: Variables & Data Types",
+                "description": "Practice with variables and data types.",
+                "course_id": 101,
+                "course_name": "Introduction to Programming",
+                "course_code": "CS101",
+                "due_date": "2024-03-10T23:59:00",
+                "max_points": 100,
+                "assignment_type": "Homework",
+                "instructions": "Complete all questions.",
+                "is_published": True,
+                "my_submission": {
+                    "id": 1,
+                    "submitted_at": "2024-03-09T20:00:00",
+                    "grade": 95,
+                    "feedback": "Great job!",
+                    "file_path": "/uploads/assignments/hw1.pdf"
+                },
+                "status": "graded"
+            },
+            {
+                "id": 2,
+                "title": "Project Proposal",
+                "description": "Submit your project proposal.",
+                "course_id": 102,
+                "course_name": "Data Structures and Algorithms",
+                "course_code": "CS201",
+                "due_date": "2024-03-15T23:59:00",
+                "max_points": 100,
+                "assignment_type": "Project",
+                "instructions": "Upload your proposal as a PDF.",
+                "is_published": True,
+                "my_submission": {
+                    "id": 2,
+                    "submitted_at": "2024-03-14T18:00:00",
+                    "grade": 88,
+                    "feedback": "Well done.",
+                    "file_path": "/uploads/assignments/proposal.pdf"
+                },
+                "status": "graded"
+            }
+        ]
+    }
 
 @app.get("/api/quizzes/{quiz_id}/my-attempts")
 async def get_quiz_attempts(
@@ -3019,75 +3178,105 @@ async def start_quiz(
 # ============================================================================
 
 @app.get("/api/student/grades")
-async def get_student_grades(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
-        if current_user.role != UserRole.STUDENT:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        # Get all grades for the student
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == current_user.id
-        ).all()
-
-        grades = []
-        for enrollment in enrollments:
-            course = enrollment.course
-
-            # Get assignment grades
-            submissions = db.query(AssignmentSubmission).filter(
-                AssignmentSubmission.student_id == current_user.id,
-                AssignmentSubmission.assignment_id.in_(
-                    db.query(Assignment.id).filter(Assignment.course_id == course.id)
-                )
-            ).all()
-
-            # Get quiz grades (with error handling for missing models)
-            quiz_attempts = []
-            try:
-                from models import StudentQuizAttempt, Quiz
-                quiz_attempts = db.query(StudentQuizAttempt).filter(
-                    StudentQuizAttempt.user_id == current_user.id,
-                    StudentQuizAttempt.quiz_id.in_(
-                        db.query(Quiz.id).filter(Quiz.course_id == course.id)
-                    )
-                ).all()
-            except (ImportError, AttributeError):
-                # Quiz models might not exist yet, skip quiz grades
-                pass
-
-            course_grades = {
-                "course_id": course.id,
-                "course_name": course.name,
-                "course_code": course.code,
-                "current_grade": enrollment.current_grade,
-                "assignments": [
-                    {
-                        "title": submission.assignment.title,
-                        "grade": submission.grade,
-                        "max_points": submission.assignment.max_points,
-                        "submitted_date": submission.submitted_at.isoformat() if submission.submitted_at else None
-                    }
-                    for submission in submissions if submission.grade is not None
-                ],
-                "quizzes": [
-                    {
-                        "title": attempt.quiz.title,
-                        "score": attempt.score,
-                        "total_points": attempt.total_points,
-                        "completed_date": attempt.completed_at.isoformat() if attempt.completed_at else None
-                    }
-                    for attempt in quiz_attempts if attempt.score is not None
-                ]
+async def get_student_grades():
+    """
+    Demo endpoint for student grades - returns mock data
+    """
+    return {
+        "grades": [
+            {
+                "id": 1,
+                "assignment_title": "HW 1: Variables & Data Types",
+                "course_name": "Introduction to Programming",
+                "course_code": "CS101",
+                "grade": 95,
+                "max_points": 100,
+                "percentage": 95.0,
+                "assignment_type": "homework",
+                "submitted_date": "2024-03-10T20:00:00",
+                "graded_date": "2024-03-11T15:00:00",
+                "status": "graded"
+            },
+            {
+                "id": 2,
+                "assignment_title": "Project Proposal",
+                "course_name": "Data Structures and Algorithms",
+                "course_code": "CS201",
+                "grade": 88,
+                "max_points": 100,
+                "percentage": 88.0,
+                "assignment_type": "project",
+                "submitted_date": "2024-03-12T18:00:00",
+                "graded_date": "2024-03-13T14:00:00",
+                "status": "graded"
+            },
+            {
+                "id": 3,
+                "assignment_title": "Database Design Assignment",
+                "course_name": "Database Systems",
+                "course_code": "CS301",
+                "grade": 92,
+                "max_points": 100,
+                "percentage": 92.0,
+                "assignment_type": "assignment",
+                "submitted_date": "2024-03-18T20:00:00",
+                "graded_date": "2024-03-19T15:00:00",
+                "status": "graded"
             }
-            grades.append(course_grades)
+        ]
+    }
 
-        return {"grades": grades}
-    except Exception as e:
-        # Return empty grades list instead of error for now
-        return {"grades": []}
+@app.get("/api/student/course-grades")
+async def get_student_course_grades():
+    """
+    Demo endpoint for student course grades - returns mock data
+    """
+    return {
+        "course_grades": [
+            {
+                "course_id": 1,
+                "course_name": "Introduction to Programming",
+                "course_code": "CS101",
+                "credits": 3,
+                "current_grade": 95,
+                "letter_grade": "A",
+                "assignments_completed": 5,
+                "total_assignments": 5,
+                "attendance_percentage": 98.0
+            },
+            {
+                "course_id": 2,
+                "course_name": "Data Structures",
+                "course_code": "CS201",
+                "credits": 4,
+                "current_grade": 88,
+                "letter_grade": "B+",
+                "assignments_completed": 4,
+                "total_assignments": 5,
+                "attendance_percentage": 92.0
+            },
+            {
+                "course_id": 3,
+                "course_name": "Algorithms",
+                "course_code": "CS301",
+                "credits": 3,
+                "current_grade": 78,
+                "letter_grade": "C+",
+                "assignments_completed": 3,
+                "total_assignments": 5,
+                "attendance_percentage": 85.0
+            }
+        ]
+    }
+
+@app.get("/api/student/semesters")
+async def get_student_semesters():
+    return {
+        "semesters": [
+            {"id": 1, "name": "Spring", "year": 2024, "gpa": 3.85, "credits": 18, "is_current": True},
+            {"id": 2, "name": "Fall", "year": 2023, "gpa": 3.72, "credits": 20, "is_current": False}
+        ]
+    }
 
 @app.get("/api/student/submissions")
 async def get_student_submissions(
@@ -4190,6 +4379,238 @@ async def create_sample_video(
     except Exception as e:
         logger.error(f"Create sample video error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# ============================================================================
+# Predefined Users for Portfolio Demo
+# ============================================================================
+
+@app.get("/api/predefined-users")
+async def get_predefined_users():
+    """Get predefined users for portfolio demo"""
+    predefined_users = {
+        "admin": {
+            "id": 1,
+            "name": "System Administrator",
+            "email": "admin@lms.edu",
+            "role": "admin",
+            "subscription_status": "premium"
+        },
+        "lecturer": {
+            "id": 2,
+            "name": "Dr. Sarah Johnson",
+            "email": "sarah.johnson@lms.edu",
+            "role": "lecturer",
+            "subscription_status": "premium"
+        },
+        "student": {
+            "id": 3,
+            "name": "Alice Smith",
+            "email": "alice.smith@student.lms.edu",
+            "role": "student",
+            "subscription_status": "free"
+        }
+    }
+    return {"users": predefined_users}
+
+@app.get("/api/user")
+async def get_current_user_demo():
+    """Get current user for demo purposes"""
+    # For demo purposes, return a default user
+    # In a real app, this would check cookies/tokens
+    return {
+        "user": {
+            "id": 3,
+            "name": "Alice Smith",
+            "email": "alice.smith@student.lms.edu",
+            "role": "student",
+            "subscription_status": "free"
+        }
+    }
+
+@app.get("/api/materials")
+async def get_materials():
+    return {"materials": [{"id": 1, "title": "Demo Material", "type": "document", "url": "/videos/demo.mp4"}]}
+
+@app.post("/api/materials")
+async def create_material(request: dict):
+    return {"material": {"id": 2, **request}, "message": "Material created successfully"}
+
+@app.get("/api/lessons")
+async def get_lessons():
+    return {"lessons": [{"id": 1, "title": "Demo Lesson", "content": "This is a demo lesson."}]}
+
+@app.post("/api/lessons")
+async def create_lesson(request: dict):
+    return {"lesson": {"id": 2, **request}, "message": "Lesson created successfully"}
+
+@app.get("/api/analytics")
+async def get_analytics():
+    return {"analytics": {"active_users": 3, "assignments_submitted": 2, "courses": 2}}
+
+@app.get("/api/student/grades")
+async def get_student_grades(semester_id: int = Query(None)):
+    return {
+        "grades": [
+            {"id": 1, "assignment_title": "HW 1: Variables & Data Types", "course_name": "Introduction to Programming", "course_code": "CS101", "grade": 95, "max_points": 100, "percentage": 95, "assignment_type": "Homework", "submitted_date": "2024-03-01", "graded_date": "2024-03-03", "feedback": "Great job!", "is_late": False},
+            {"id": 2, "assignment_title": "Project Proposal", "course_name": "Data Structures and Algorithms", "course_code": "CS201", "grade": 88, "max_points": 100, "percentage": 88, "assignment_type": "Project", "submitted_date": "2024-03-05", "graded_date": "2024-03-07", "feedback": "Well done.", "is_late": False}
+        ]
+    }
+
+@app.get("/api/student/course-grades")
+async def get_student_course_grades(semester_id: int = Query(None)):
+    return {
+        "course_grades": [
+            {"course_id": 101, "course_name": "Introduction to Programming", "course_code": "CS101", "credits": 3, "current_grade": 95, "letter_grade": "A", "assignments_completed": 5, "total_assignments": 6, "attendance_percentage": 97},
+            {"course_id": 102, "course_name": "Data Structures and Algorithms", "course_code": "CS201", "credits": 4, "current_grade": 88, "letter_grade": "B+", "assignments_completed": 4, "total_assignments": 5, "attendance_percentage": 92}
+        ]
+    }
+
+# Mock enrollments data for demo
+MOCK_ENROLLMENTS = [
+    {
+        "id": 1,
+        "course_id": 101,
+        "course_name": "Introduction to Programming",
+        "course_code": "CS101",
+        "program": "Bachelor of Computer Science",
+        "semester": "Fall 2023",
+        "enrollment_date": "2023-09-01T00:00:00",
+        "status": "active",
+        "grade": 95,
+        "credits": 3
+    },
+    {
+        "id": 2,
+        "course_id": 102,
+        "course_name": "Data Structures and Algorithms",
+        "course_code": "CS201",
+        "program": "Bachelor of Computer Science",
+        "semester": "Fall 2023",
+        "enrollment_date": "2023-09-01T00:00:00",
+        "status": "active",
+        "grade": 88,
+        "credits": 4
+    },
+    {
+        "id": 3,
+        "course_id": 103,
+        "course_name": "Database Systems",
+        "course_code": "CS301",
+        "program": "Bachelor of Computer Science",
+        "semester": "Spring 2024",
+        "enrollment_date": "2024-01-10T00:00:00",
+        "status": "active",
+        "grade": 92,
+        "credits": 3
+    }
+]
+
+# Mock discussions data for demo
+MOCK_DISCUSSIONS = [
+    {
+        "id": 1,
+        "title": "Welcome to the course!",
+        "content": "Introduce yourself and share your goals for this course.",
+        "author": "Dr. Sarah Johnson",
+        "author_role": "lecturer",
+        "created_at": "2024-01-10T10:00:00",
+        "updated_at": "2024-01-10T10:00:00",
+        "replies_count": 2,
+        "last_reply_at": "2024-01-12T12:00:00",
+        "last_reply_author": "Alice Smith",
+        "is_pinned": True,
+        "is_locked": False,
+        "course_id": 101,
+        "course_name": "Introduction to Programming",
+        "course_code": "CS101"
+    },
+    {
+        "id": 2,
+        "title": "Assignment 1 Discussion",
+        "content": "Discuss any questions or issues with Assignment 1 here.",
+        "author": "Alice Smith",
+        "author_role": "student",
+        "created_at": "2024-01-15T09:00:00",
+        "updated_at": "2024-01-15T09:00:00",
+        "replies_count": 1,
+        "last_reply_at": "2024-01-16T14:00:00",
+        "last_reply_author": "Dr. Sarah Johnson",
+        "is_pinned": False,
+        "is_locked": False,
+        "course_id": 101,
+        "course_name": "Introduction to Programming",
+        "course_code": "CS101"
+    }
+]
+
+MOCK_REPLIES = [
+    {
+        "id": 1,
+        "content": "Hi everyone! I'm excited to learn.",
+        "author": "Alice Smith",
+        "author_role": "student",
+        "created_at": "2024-01-10T11:00:00",
+        "updated_at": "2024-01-10T11:00:00",
+        "discussion_id": 1
+    },
+    {
+        "id": 2,
+        "content": "Welcome Alice! Looking forward to your participation.",
+        "author": "Dr. Sarah Johnson",
+        "author_role": "lecturer",
+        "created_at": "2024-01-12T12:00:00",
+        "updated_at": "2024-01-12T12:00:00",
+        "discussion_id": 1
+    },
+    {
+        "id": 3,
+        "content": "I'm having trouble with question 3 on Assignment 1.",
+        "author": "Bob Smith",
+        "author_role": "student",
+        "created_at": "2024-01-15T10:00:00",
+        "updated_at": "2024-01-15T10:00:00",
+        "discussion_id": 2
+    },
+    {
+        "id": 4,
+        "content": "Check the lecture notes for hints!",
+        "author": "Dr. Sarah Johnson",
+        "author_role": "lecturer",
+        "created_at": "2024-01-16T14:00:00",
+        "updated_at": "2024-01-16T14:00:00",
+        "discussion_id": 2
+    }
+]
+
+@app.get("/api/courses/{course_id}/discussions")
+async def get_course_discussions(course_id: int):
+    """
+    Demo endpoint for course discussions - returns mock data
+    """
+    discussions = [d for d in MOCK_DISCUSSIONS if d["course_id"] == course_id]
+    return {"discussions": discussions}
+
+@app.post("/api/discussions")
+async def create_discussion(request: dict):
+    """
+    Demo endpoint for creating a discussion - just returns success
+    """
+    return {"discussion": {"id": 999, **request}, "message": "Discussion created successfully"}
+
+@app.get("/api/discussions/{discussion_id}/replies")
+async def get_discussion_replies(discussion_id: int):
+    """
+    Demo endpoint for discussion replies - returns mock data
+    """
+    replies = [r for r in MOCK_REPLIES if r["discussion_id"] == discussion_id]
+    return {"replies": replies}
+
+@app.post("/api/discussions/{discussion_id}/replies")
+async def create_discussion_reply(discussion_id: int, request: dict):
+    """
+    Demo endpoint for creating a reply - just returns success
+    """
+    return {"reply": {"id": 999, **request}, "message": "Reply created successfully"}
 
 if __name__ == "__main__":
     # Database is initialized automatically in initialize_fresh_database()

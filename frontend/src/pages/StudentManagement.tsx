@@ -36,9 +36,7 @@ const StudentManagement: React.FC = () => {
         endpoint = "/api/lecturer/students"; // Lecturer-specific endpoint
       }
 
-      const response = await fetch(endpoint, {
-        credentials: "include",
-      });
+      const response = await fetch(endpoint);
 
       if (response.ok) {
         const data = await response.json();

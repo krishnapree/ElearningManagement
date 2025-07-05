@@ -50,29 +50,38 @@ class APIClient {
     }
   }
 
-  // Authentication
+  // Authentication - Simplified for demo
   async login(email: string, password: string) {
-    return this.request("/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    // For demo purposes, this won't be used
+    throw new Error("Please select a role from the home page");
   }
 
   async register(name: string, email: string, password: string) {
-    return this.request("/register", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password }),
-    });
+    // For demo purposes, this won't be used
+    throw new Error("Please select a role from the home page");
   }
 
   async logout() {
-    return this.request("/logout", {
-      method: "POST",
-    });
+    // For demo purposes, just return success
+    return { message: "Logged out successfully" };
   }
 
   async getCurrentUser() {
-    return this.request("/user");
+    // For demo purposes, return a default user
+    // In a real app, this would check the actual user from cookies/tokens
+    return {
+      user: {
+        id: 3,
+        name: "Alice Smith",
+        email: "alice.smith@student.lms.edu",
+        role: "student",
+        subscription_status: "free"
+      }
+    };
+  }
+
+  async getPredefinedUsers() {
+    return this.request("/predefined-users");
   }
 
   async getUserProfile() {

@@ -49,10 +49,7 @@ const LecturerDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/dashboard", {
-        credentials: "include",
-      });
-
+      const response = await fetch("/api/dashboard?role=lecturer");
       if (response.ok) {
         let data = null;
         try {

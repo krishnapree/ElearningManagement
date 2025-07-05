@@ -1,9 +1,39 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth.tsx";
+import { Link, useNavigate } from "react-router-dom";
+
+// Predefined user data for each role
+const PREDEFINED_USERS = {
+  admin: {
+    id: 1,
+    name: "System Administrator",
+    email: "admin@lms.edu",
+    role: "admin",
+    subscription_status: "premium"
+  },
+  lecturer: {
+    id: 2,
+    name: "Dr. Sarah Johnson",
+    email: "sarah.johnson@lms.edu",
+    role: "lecturer",
+    subscription_status: "premium"
+  },
+  student: {
+    id: 3,
+    name: "Alice Smith",
+    email: "alice.smith@student.lms.edu",
+    role: "student",
+    subscription_status: "free"
+  }
+};
 
 const Home: React.FC = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleRoleSelect = (role: 'admin' | 'lecturer' | 'student') => {
+    localStorage.removeItem('selectedUser'); // Clear any previous user
+    localStorage.setItem('selectedUser', JSON.stringify(PREDEFINED_USERS[role]));
+    window.location.href = '/dashboard'; // Force full reload and navigation
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
@@ -40,33 +70,6 @@ const Home: React.FC = () => {
                 About
               </a>
             </div>
-
-            {/* User Actions */}
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <Link
-                  to="/dashboard"
-                  className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="text-gray-300 hover:text-white transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200"
-                  >
-                    Get Started
-                  </Link>
-                </>
-              )}
-            </div>
           </div>
         </div>
       </nav>
@@ -92,35 +95,126 @@ const Home: React.FC = () => {
               student success.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {!user ? (
-                <>
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
+            {/* Role Selection Section */}
+            <div id="roles" className="mt-16">
+              <h2 className="text-3xl font-bold text-white mb-8">
+                Choose Your Role
+              </h2>
+              <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto">
+                Experience the platform from different perspectives. Select a role to explore the features available to each user type.
+              </p>
+              
+              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                {/* Admin Role */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i className="fas fa-shield-alt text-white text-2xl"></i>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Administrator</h3>
+                  <p className="text-gray-300 mb-6">
+                    Full system access with user management, academic oversight, and comprehensive analytics.
+                  </p>
+                  <ul className="text-gray-300 text-sm mb-8 space-y-2">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      User Management
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Department & Program Management
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      System Analytics
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Campus Coordination
+                    </li>
+                  </ul>
+                  <button
+                    onClick={() => handleRoleSelect('admin')}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200"
                   >
-                    Get Started
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200"
+                    Access as Admin
+                  </button>
+                </div>
+
+                {/* Lecturer Role */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i className="fas fa-chalkboard-teacher text-white text-2xl"></i>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Lecturer</h3>
+                  <p className="text-gray-300 mb-6">
+                    Course management, student assessment, and academic content creation tools.
+                  </p>
+                  <ul className="text-gray-300 text-sm mb-8 space-y-2">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Course Management
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Student Assessment
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Material Upload
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Grade Management
+                    </li>
+                  </ul>
+                  <button
+                    onClick={() => handleRoleSelect('lecturer')}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
                   >
-                    Sign In
-                  </Link>
-                </>
-              ) : (
-                <Link
-                  to="/dashboard"
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                >
-                  Go to Dashboard
-                </Link>
-              )}
+                    Access as Lecturer
+                  </button>
+                </div>
+
+                {/* Student Role */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i className="fas fa-user-graduate text-white text-2xl"></i>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Student</h3>
+                  <p className="text-gray-300 mb-6">
+                    Course enrollment, assignment submission, and progress tracking features.
+                  </p>
+                  <ul className="text-gray-300 text-sm mb-8 space-y-2">
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Course Enrollment
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Assignment Submission
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Progress Tracking
+                    </li>
+                    <li className="flex items-center">
+                      <i className="fas fa-check text-green-400 mr-2"></i>
+                      Grade Viewing
+                    </li>
+                  </ul>
+                  <button
+                    onClick={() => handleRoleSelect('student')}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                  >
+                    Access as Student
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Dashboard Preview */}
-          <div id="features" className="relative max-w-6xl mx-auto">
+          <div id="features" className="relative max-w-6xl mx-auto mt-20">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
               {/* Dashboard Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
@@ -199,175 +293,80 @@ const Home: React.FC = () => {
                   </nav>
                 </div>
 
-                {/* Main Content */}
+                {/* Main Content Area */}
                 <div className="flex-1 p-6">
-                  {/* Stats Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-400 text-sm">
-                          Total Students
-                        </span>
-                        <span className="text-green-400 text-sm">↗ 12.04%</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        15,799
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Stats Cards */}
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-blue-100 text-sm">Total Students</p>
+                          <p className="text-2xl font-bold">1,234</p>
+                        </div>
+                        <i className="fas fa-users text-2xl opacity-80"></i>
                       </div>
                     </div>
 
-                    <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-400 text-sm">
-                          Total Enrolled
-                        </span>
-                        <span className="text-red-400 text-sm">↘ 4.06%</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        13,290
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-green-100 text-sm">Active Courses</p>
+                          <p className="text-2xl font-bold">56</p>
+                        </div>
+                        <i className="fas fa-book text-2xl opacity-80"></i>
                       </div>
                     </div>
 
-                    <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-400 text-sm">
-                          Active Courses
-                        </span>
-                        <span className="text-green-400 text-sm">↗ 11.07%</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        11,000
+                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-purple-100 text-sm">Assignments</p>
+                          <p className="text-2xl font-bold">89</p>
+                        </div>
+                        <i className="fas fa-tasks text-2xl opacity-80"></i>
                       </div>
                     </div>
 
-                    <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-400 text-sm">
-                          Completion Rate
-                        </span>
-                        <span className="text-green-400 text-sm">↗ 16.00%</span>
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100 text-sm">Completion Rate</p>
+                          <p className="text-2xl font-bold">94%</p>
+                        </div>
+                        <i className="fas fa-chart-line text-2xl opacity-80"></i>
                       </div>
-                      <div className="text-2xl font-bold text-white">89.3%</div>
                     </div>
                   </div>
 
-                  {/* Charts Section */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Learning Progress Chart */}
-                    <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-white font-semibold">
-                          Learning Progress
-                        </h3>
-                        <select className="bg-gray-600/50 text-white text-sm rounded-lg px-3 py-1 border border-gray-500/50">
-                          <option>Yearly</option>
-                        </select>
-                      </div>
-                      <div className="h-48 flex items-end justify-between space-x-2">
-                        {[40, 60, 30, 80, 50, 90, 70, 85, 45, 75, 95, 65].map(
-                          (height, index) => (
-                            <div
-                              key={index}
-                              className="flex-1 bg-gradient-to-t from-orange-500/20 to-orange-500/60 rounded-t"
-                              style={{ height: `${height}%` }}
-                            ></div>
-                          )
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Top Courses */}
-                    <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-white font-semibold">
-                          Top Courses
-                        </h3>
-                        <button className="text-orange-400 text-sm hover:text-orange-300">
-                          View all
-                        </button>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                CS
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-white font-medium">
-                                Computer Science
-                              </div>
-                              <div className="text-gray-400 text-sm">
-                                342 Students
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-white font-semibold">
-                            $3,862.00
-                          </div>
+                  {/* Recent Activity */}
+                  <div className="mt-8 bg-gray-800/30 rounded-lg p-6">
+                    <h3 className="text-white font-semibold mb-4">Recent Activity</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                          <i className="fas fa-user-plus text-white text-sm"></i>
                         </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                UX
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-white font-medium">
-                                UX Design
-                              </div>
-                              <div className="text-gray-400 text-sm">
-                                298 Students
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-white font-semibold">
-                            $3,752.00
-                          </div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm">New student enrolled in Computer Science</p>
+                          <p className="text-gray-400 text-xs">2 hours ago</p>
                         </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                WF
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-white font-medium">
-                                Web Development
-                              </div>
-                              <div className="text-gray-400 text-sm">
-                                256 Students
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-white font-semibold">
-                            $1,252.00
-                          </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                          <i className="fas fa-upload text-white text-sm"></i>
                         </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                UI
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-white font-medium">
-                                UI Design
-                              </div>
-                              <div className="text-gray-400 text-sm">
-                                198 Students
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-white font-semibold">
-                            $1,278.00
-                          </div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm">Course materials uploaded for Mathematics 101</p>
+                          <p className="text-gray-400 text-xs">4 hours ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                          <i className="fas fa-check text-white text-sm"></i>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm">Assignment graded for Physics Lab</p>
+                          <p className="text-gray-400 text-xs">6 hours ago</p>
                         </div>
                       </div>
                     </div>
@@ -379,179 +378,51 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* User Roles Section */}
-      <section id="roles" className="py-24 bg-gray-900">
+      {/* Features Section */}
+      <section id="about" className="py-20 bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Designed for Every Educational Role
+              Powerful Features for Every Role
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              EduFlow provides tailored experiences for administrators,
-              lecturers, and students
+              Our comprehensive LMS platform provides tailored experiences for administrators, lecturers, and students.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Administrator */}
-            <div className="group relative bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-gray-700/50">
-              <div className="absolute top-4 right-4">
-                <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
-                  <i className="fas fa-shield-alt text-red-400 text-xl"></i>
-                </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-shield-alt text-white text-2xl"></i>
               </div>
-
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  Administrator
-                </h3>
-                <p className="text-gray-300">
-                  Complete system oversight and management
-                </p>
-              </div>
-
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-red-400 mr-2 flex-shrink-0"></i>
-                  User & Role Management
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-red-400 mr-2 flex-shrink-0"></i>
-                  Academic Structure Setup
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-red-400 mr-2 flex-shrink-0"></i>
-                  System Analytics & Reports
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-red-400 mr-2 flex-shrink-0"></i>
-                  Campus Coordination
-                </li>
-              </ul>
-
-              <div className="text-center">
-                <span className="inline-flex items-center px-4 py-2 bg-red-500/20 text-red-300 rounded-lg text-sm font-medium">
-                  <i className="fas fa-users mr-2"></i>
-                  System Control
-                </span>
-              </div>
+              <h3 className="text-xl font-bold text-white mb-4">Administrative Control</h3>
+              <p className="text-gray-300">
+                Complete system oversight with user management, academic planning, and comprehensive analytics.
+              </p>
             </div>
 
-            {/* Lecturer */}
-            <div className="group relative bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-gray-700/50">
-              <div className="absolute top-4 right-4">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                  <i className="fas fa-book-open text-blue-400 text-xl"></i>
-                </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-chalkboard-teacher text-white text-2xl"></i>
               </div>
-
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">Lecturer</h3>
-                <p className="text-gray-300">
-                  Course delivery and student assessment
-                </p>
-              </div>
-
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-blue-400 mr-2 flex-shrink-0"></i>
-                  Course Management
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-blue-400 mr-2 flex-shrink-0"></i>
-                  Quiz & Assignment Creation
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-blue-400 mr-2 flex-shrink-0"></i>
-                  Student Progress Tracking
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-blue-400 mr-2 flex-shrink-0"></i>
-                  Grading & Feedback
-                </li>
-              </ul>
-
-              <div className="text-center">
-                <span className="inline-flex items-center px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm font-medium">
-                  <i className="fas fa-bullseye mr-2"></i>
-                  Teaching Tools
-                </span>
-              </div>
+              <h3 className="text-xl font-bold text-white mb-4">Teaching Excellence</h3>
+              <p className="text-gray-300">
+                Advanced tools for course creation, student assessment, and content management.
+              </p>
             </div>
 
-            {/* Student */}
-            <div className="group relative bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-gray-700/50">
-              <div className="absolute top-4 right-4">
-                <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
-                  <i className="fas fa-graduation-cap text-green-400 text-xl"></i>
-                </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-user-graduate text-white text-2xl"></i>
               </div>
-
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">Student</h3>
-                <p className="text-gray-300">AI-enhanced learning experience</p>
-              </div>
-
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-green-400 mr-2 flex-shrink-0"></i>
-                  AI Tutoring & Chat
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-green-400 mr-2 flex-shrink-0"></i>
-                  Quiz & Assignment Access
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-green-400 mr-2 flex-shrink-0"></i>
-                  Grade Tracking
-                </li>
-                <li className="flex items-center text-sm text-gray-300">
-                  <i className="fas fa-check-circle text-green-400 mr-2 flex-shrink-0"></i>
-                  Course Materials
-                </li>
-              </ul>
-
-              <div className="text-center">
-                <span className="inline-flex items-center px-4 py-2 bg-green-500/20 text-green-300 rounded-lg text-sm font-medium">
-                  <i className="fas fa-brain mr-2"></i>
-                  AI Learning
-                </span>
-              </div>
+              <h3 className="text-xl font-bold text-white mb-4">Student Success</h3>
+              <p className="text-gray-300">
+                Intuitive learning experience with progress tracking, assignment submission, and grade monitoring.
+              </p>
             </div>
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      {!user && (
-        <section className="bg-gradient-to-r from-orange-600 to-red-600 py-20">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-bold text-white mb-6">
-              Ready to Transform Education?
-            </h2>
-            <p className="text-xl text-orange-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of educational institutions already using EduFlow
-              to enhance learning outcomes with AI-powered education.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/register"
-                className="inline-flex items-center px-8 py-4 bg-white text-orange-600 font-semibold rounded-xl hover:bg-gray-100 transform hover:scale-105 transition-all duration-200 shadow-lg"
-              >
-                <i className="fas fa-rocket mr-2"></i>
-                Start Free Trial
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white hover:text-orange-600 transition-all duration-200"
-              >
-                <i className="fas fa-sign-in-alt mr-2"></i>
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
     </div>
   );
 };

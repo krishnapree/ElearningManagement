@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   subscription_status: string;
-  role?: "admin" | "lecturer" | "student" | "parent";
+  role?: "admin" | "lecturer" | "student" | "parent" | "superuser";
   student_id?: string;
   employee_id?: string;
 }

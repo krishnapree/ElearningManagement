@@ -213,7 +213,7 @@ const CourseDetails: React.FC = () => {
               { key: "materials", label: "Materials", icon: "fas fa-file-alt" },
               { key: "assignments", label: "Assignments", icon: "fas fa-tasks" },
               { key: "announcements", label: "Announcements", icon: "fas fa-bullhorn" },
-              ...(user?.role === "admin" ? [{ key: "content", label: "Content Management", icon: "fas fa-edit" }] : [])
+              ...( _user?.role === "admin" ? [{ key: "content", label: "Content Management", icon: "fas fa-edit" }] : [])
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -339,7 +339,7 @@ const CourseDetails: React.FC = () => {
           </div>
         )}
 
-        {activeTab === "content" && user?.role === "admin" && (
+        {activeTab === "content" && _user?.role === "admin" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">

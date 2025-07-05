@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // Predefined user data for each role
 const PREDEFINED_USERS = {
@@ -27,8 +27,6 @@ const PREDEFINED_USERS = {
 };
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
-
   const handleRoleSelect = (role: 'admin' | 'lecturer' | 'student') => {
     localStorage.removeItem('selectedUser'); // Clear any previous user
     localStorage.setItem('selectedUser', JSON.stringify(PREDEFINED_USERS[role]));

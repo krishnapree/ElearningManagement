@@ -19,7 +19,7 @@ interface UploadedMaterial {
 }
 
 const LecturerUploadMaterials: React.FC = () => {
-  const { courseId } = useParams<{ courseId: string }>();
+  const { courseId: _courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -34,15 +34,15 @@ const LecturerUploadMaterials: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    if (courseId) {
+    if (_courseId) {
       fetchCourseDetails();
       fetchCourseMaterials();
     }
-  }, [courseId]);
+  }, [_courseId]);
 
   const fetchCourseDetails = async () => {
     try {
-      const response = await fetch(`/api/courses/${courseId}`, {
+      const response = await fetch(`/api/courses/${_courseId}`, {
         credentials: "include",
       });
 
@@ -59,7 +59,7 @@ const LecturerUploadMaterials: React.FC = () => {
 
   const fetchCourseMaterials = async () => {
     try {
-      const response = await fetch(`/api/courses/${courseId}/materials`, {
+      const response = await fetch(`/api/courses/${_courseId}/materials`, {
         credentials: "include",
       });
 
@@ -109,7 +109,7 @@ const LecturerUploadMaterials: React.FC = () => {
     formData.append("material_type", materialType);
 
     try {
-      const response = await fetch(`/api/courses/${courseId}/materials`, {
+      const response = await fetch(`/api/courses/${_courseId}/materials`, {
         method: "POST",
         credentials: "include",
         body: formData,

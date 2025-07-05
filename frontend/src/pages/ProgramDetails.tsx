@@ -32,7 +32,7 @@ interface Course {
 }
 
 const ProgramDetails: React.FC = () => {
-  const { programId } = useParams<{ programId: string }>();
+  const { programId: _programId } = useParams<{ programId: string }>();
   
   const [program, setProgram] = useState<Program | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -41,11 +41,11 @@ const ProgramDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "courses" | "students">("overview");
 
   useEffect(() => {
-    if (programId) {
+    if (_programId) {
       fetchProgramDetails();
       fetchProgramCourses();
     }
-  }, [programId]);
+  }, [_programId]);
 
   const fetchProgramDetails = async () => {
     try {
@@ -55,7 +55,7 @@ const ProgramDetails: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const foundProgram = data.programs?.find((p: Program) => p.id === parseInt(programId!));
+        const foundProgram = data.programs?.find((p: Program) => p.id === parseInt(_programId!));
         
         if (foundProgram) {
           setProgram(foundProgram);

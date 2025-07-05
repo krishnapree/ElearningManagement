@@ -46,8 +46,8 @@ interface Post {
 }
 
 const DiscussionForums: React.FC = () => {
-  const { user } = useAuth()
-  const { courseId, forumId, threadId } = useParams()
+  const { user: _user } = useAuth()
+  const { courseId: _courseId, forumId: _forumId, threadId: _threadId } = useParams()
   const [forums, setForums] = useState<Forum[]>([])
   const [threads, setThreads] = useState<Thread[]>([])
   const [posts, setPosts] = useState<Post[]>([])
@@ -68,19 +68,19 @@ const DiscussionForums: React.FC = () => {
   })
 
   useEffect(() => {
-    if (courseId) {
-      if (threadId) {
+    if (_courseId) {
+      if (_threadId) {
         setView('posts')
-        fetchThreadPosts(parseInt(threadId))
-      } else if (forumId) {
+        fetchThreadPosts(parseInt(_threadId))
+      } else if (_forumId) {
         setView('threads')
-        fetchForumThreads(parseInt(forumId))
+        fetchForumThreads(parseInt(_forumId))
       } else {
         setView('forums')
-        fetchCourseForums(parseInt(courseId))
+        fetchCourseForums(parseInt(_courseId))
       }
     }
-  }, [courseId, forumId, threadId])
+  }, [_courseId, _forumId, _threadId])
 
   const fetchCourseForums = async (courseId: number) => {
     try {
@@ -139,10 +139,10 @@ const DiscussionForums: React.FC = () => {
 
   const handleCreateThread = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!forumId) return
+    if (!_forumId) return
 
     try {
-      const response = await fetch(`/api/forums/${forumId}/threads`, {
+      const response = await fetch(`/api/forums/${_forumId}/threads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ const DiscussionForums: React.FC = () => {
       if (response.ok) {
         setShowCreateModal(false)
         setNewThread({ title: '', content: '' })
-        fetchForumThreads(parseInt(forumId))
+        fetchForumThreads(parseInt(_forumId))
       }
     } catch (error) {
       console.error('Failed to create thread:', error)
@@ -163,10 +163,10 @@ const DiscussionForums: React.FC = () => {
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!threadId) return
+    if (!_threadId) return
 
     try {
-      const response = await fetch(`/api/threads/${threadId}/posts`, {
+      const response = await fetch(`/api/threads/${_threadId}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ const DiscussionForums: React.FC = () => {
       if (response.ok) {
         setShowReplyModal(false)
         setNewPost({ content: '', parent_post_id: null })
-        fetchThreadPosts(parseInt(threadId))
+        fetchThreadPosts(parseInt(_threadId))
       }
     } catch (error) {
       console.error('Failed to create post:', error)
@@ -215,14 +215,14 @@ const DiscussionForums: React.FC = () => {
         {/* Breadcrumb Navigation */}
         <nav className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-500">
-            <li><Link to={`/courses/${courseId}/forums`} className="hover:text-primary-600">Forums</Link></li>
-            {forumId && (
+            <li><Link to={`/courses/${_courseId}/forums`} className="hover:text-primary-600">Forums</Link></li>
+            {_forumId && (
               <>
                 <li><i className="fas fa-chevron-right"></i></li>
-                <li><Link to={`/courses/${courseId}/forums/${forumId}`} className="hover:text-primary-600">Threads</Link></li>
+                <li><Link to={`/courses/${_courseId}/forums/${_forumId}`} className="hover:text-primary-600">Threads</Link></li>
               </>
             )}
-            {threadId && (
+            {_threadId && (
               <>
                 <li><i className="fas fa-chevron-right"></i></li>
                 <li className="text-gray-900">Discussion</li>
@@ -236,7 +236,7 @@ const DiscussionForums: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-3xl font-bold text-gray-900">Discussion Forums</h1>
-              {(user?.role === 'admin' || user?.role === 'lecturer') && (
+              {(_user?.role === 'admin' || _user?.role === 'lecturer') && (
                 <button className="btn btn-primary">
                   <i className="fas fa-plus mr-2"></i>
                   Create Forum
@@ -248,7 +248,7 @@ const DiscussionForums: React.FC = () => {
               {forums.map((forum) => (
                 <Link
                   key={forum.id}
-                  to={`/courses/${courseId}/forums/${forum.id}`}
+                  to={`/courses/${_courseId}/forums/${forum.id}`}
                   className="block p-6 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-start justify-between">
@@ -299,7 +299,7 @@ const DiscussionForums: React.FC = () => {
               {threads.map((thread) => (
                 <Link
                   key={thread.id}
-                  to={`/courses/${courseId}/forums/${forumId}/threads/${thread.id}`}
+                  to={`/courses/${_courseId}/forums/${_forumId}/threads/${thread.id}`}
                   className="block p-6 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-start justify-between">

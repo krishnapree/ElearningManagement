@@ -50,8 +50,8 @@ interface User {
 }
 
 const DepartmentDetails: React.FC = () => {
-  const { user } = useAuth();
-  const { departmentId } = useParams<{ departmentId: string }>();
+  const { user: _user } = useAuth();
+  const { departmentId: _departmentId } = useParams<{ departmentId: string }>();
   
   const [department, setDepartment] = useState<Department | null>(null);
   const [availableLecturers, setAvailableLecturers] = useState<User[]>([]);
@@ -65,15 +65,15 @@ const DepartmentDetails: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
-    if (departmentId) {
+    if (_departmentId) {
       fetchDepartmentDetails();
       fetchAvailableLecturers();
     }
-  }, [departmentId]);
+  }, [_departmentId]);
 
   const fetchDepartmentDetails = async () => {
     try {
-      const response = await fetch(`/api/academic/departments/${departmentId}`, {
+      const response = await fetch(`/api/academic/departments/${_departmentId}`, {
         credentials: "include",
       });
 
@@ -111,7 +111,7 @@ const DepartmentDetails: React.FC = () => {
 
     try {
       setAssigning(true);
-      const response = await fetch(`/api/academic/departments/${departmentId}/assign-lecturer`, {
+      const response = await fetch(`/api/academic/departments/${_departmentId}/assign-lecturer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -218,7 +218,7 @@ const DepartmentDetails: React.FC = () => {
               </div>
             </div>
             
-            {user?.role === "admin" && (
+            {_user?.role === "admin" && (
               <button
                 onClick={() => setShowAssignModal(true)}
                 className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"

@@ -7,8 +7,6 @@ import Quiz from "./pages/Quiz";
 import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Courses from "./pages/Courses";
 import StudentEnrollments from "./pages/StudentEnrollments";
 import StudentAssignments from "./pages/StudentAssignments";

@@ -151,7 +151,8 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     # In demo mode, just return a demo user
-    if os.getenv("ENVIRONMENT") == "production" and not os.getenv("JWT_SECRET_KEY"):
+    jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+    if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
         return get_demo_user(db)
 
     # Try to get token from cookie first
@@ -165,27 +166,31 @@ async def get_current_user(
 
     if not token:
         # In demo mode, return demo user instead of error
-        if os.getenv("ENVIRONMENT") == "production":
+        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
             return get_demo_user(db)
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
         user_id, token_type = auth_manager.verify_token(token)
         if user_id is None or token_type != "access":
-            if os.getenv("ENVIRONMENT") == "production":
+            jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+            if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
                 return get_demo_user(db)
             raise HTTPException(status_code=401, detail="Invalid token")
 
         user = auth_manager.get_user_by_id(db, user_id)
         if user is None:
-            if os.getenv("ENVIRONMENT") == "production":
+            jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+            if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
                 return get_demo_user(db)
             raise HTTPException(status_code=401, detail="User not found")
 
         return user
     except Exception:
-        # Fallback to demo user in production
-        if os.getenv("ENVIRONMENT") == "production":
+        # Fallback to demo user in demo mode
+        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
             return get_demo_user(db)
         raise HTTPException(status_code=401, detail="Authentication failed")
 

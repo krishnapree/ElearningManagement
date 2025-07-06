@@ -107,13 +107,17 @@ initialize_fresh_database()
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System (Demo Mode)")
 
 # Allow frontend origin(s) - Update with your actual frontend URL
-origins = [
-    "https://your-frontend-url.onrender.com",  # Your actual frontend domain
-    "https://elearningmanagement.onrender.com",  # Your frontend domain
-    "http://localhost:5173",                      # For local dev
-    "http://localhost:3000",                      # Alternative local dev port
-    "*"  # Allow all origins for demo purposes - remove in production
-]
+# Configure CORS origins from environment variable for Railway deployment
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+if cors_origins_env:
+    origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+else:
+    # Default origins for development and demo
+    origins = [
+        "http://localhost:5173",                      # For local dev
+        "http://localhost:3000",                      # Alternative local dev port
+        "*"  # Allow all origins for demo purposes - remove in production
+    ]
 
 app.add_middleware(
     CORSMiddleware,
@@ -343,23 +347,71 @@ async def get_dashboard_data(role: str = "admin"):
             "current_semester": {"id": 1, "name": "Spring 2024", "year": 2024},
             "enrollments": [
                 {"id": 1, "course": {"id": 101, "name": "Introduction to Programming", "code": "CS101", "credits": 3, "lecturer": "Dr. Sarah Johnson"}, "status": "enrolled", "final_grade": "A", "attendance_percentage": 95},
-                {"id": 2, "course": {"id": 102, "name": "Data Structures and Algorithms", "code": "CS201", "credits": 4, "lecturer": "Dr. Michael Chen"}, "status": "enrolled", "final_grade": "B+", "attendance_percentage": 92}
+                {"id": 2, "course": {"id": 102, "name": "Data Structures and Algorithms", "code": "CS201", "credits": 4, "lecturer": "Dr. Michael Chen"}, "status": "enrolled", "final_grade": "B+", "attendance_percentage": 92},
+                {"id": 3, "course": {"id": 103, "name": "Database Systems", "code": "CS301", "credits": 3, "lecturer": "Prof. Lisa Anderson"}, "status": "enrolled", "final_grade": "A-", "attendance_percentage": 88},
+                {"id": 4, "course": {"id": 104, "name": "Web Development", "code": "CS250", "credits": 3, "lecturer": "Dr. James Wilson"}, "status": "enrolled", "final_grade": "B", "attendance_percentage": 91},
+                {"id": 5, "course": {"id": 105, "name": "Software Engineering", "code": "CS350", "credits": 4, "lecturer": "Dr. Emily Davis"}, "status": "enrolled", "final_grade": "A", "attendance_percentage": 97},
+                {"id": 6, "course": {"id": 106, "name": "Computer Networks", "code": "CS401", "credits": 3, "lecturer": "Prof. Robert Brown"}, "status": "enrolled", "final_grade": "B+", "attendance_percentage": 89}
             ],
             "upcoming_assignments": [
-                {"id": 1, "title": "HW 1: Variables & Data Types", "course": "Introduction to Programming", "course_code": "CS101", "due_date": "2024-03-10T23:59:00", "max_points": 100, "days_until_due": 2},
-                {"id": 2, "title": "Project Proposal", "course": "Data Structures and Algorithms", "course_code": "CS201", "due_date": "2024-03-15T23:59:00", "max_points": 100, "days_until_due": 7}
+                {"id": 1, "title": "Binary Search Tree Implementation", "course": "Data Structures and Algorithms", "course_code": "CS201", "due_date": "2024-03-12T23:59:00", "max_points": 100, "days_until_due": 3, "type": "Programming", "difficulty": "Medium"},
+                {"id": 2, "title": "Database Design Project", "course": "Database Systems", "course_code": "CS301", "due_date": "2024-03-15T23:59:00", "max_points": 150, "days_until_due": 6, "type": "Project", "difficulty": "Hard"},
+                {"id": 3, "title": "React Portfolio Website", "course": "Web Development", "course_code": "CS250", "due_date": "2024-03-18T23:59:00", "max_points": 120, "days_until_due": 9, "type": "Project", "difficulty": "Medium"},
+                {"id": 4, "title": "Unit Testing Lab", "course": "Software Engineering", "course_code": "CS350", "due_date": "2024-03-20T23:59:00", "max_points": 80, "days_until_due": 11, "type": "Lab", "difficulty": "Easy"},
+                {"id": 5, "title": "Network Protocol Analysis", "course": "Computer Networks", "course_code": "CS401", "due_date": "2024-03-22T23:59:00", "max_points": 100, "days_until_due": 13, "type": "Research", "difficulty": "Hard"},
+                {"id": 6, "title": "Algorithm Complexity Quiz", "course": "Data Structures and Algorithms", "course_code": "CS201", "due_date": "2024-03-25T14:30:00", "max_points": 50, "days_until_due": 16, "type": "Quiz", "difficulty": "Medium"}
             ],
-            "academic_progress": {"gpa": 3.78, "total_credits": 90, "credits_earned": 90, "completion_percentage": 75},
-            "total_courses": 2,
-            "completed_assignments": 12,
+            "academic_progress": {"gpa": 3.78, "total_credits": 120, "credits_earned": 102, "completion_percentage": 85},
+            "total_courses": 6,
+            "completed_assignments": 28,
             "recent_grades": [
-                {"assignment_title": "HW 1: Variables & Data Types", "course_name": "Introduction to Programming", "grade": 95, "max_points": 100, "percentage": 95, "graded_date": "2024-03-03"},
-                {"assignment_title": "Project Proposal", "course_name": "Data Structures and Algorithms", "grade": 88, "max_points": 100, "percentage": 88, "graded_date": "2024-03-07"}
+                {"assignment_title": "Sorting Algorithms Lab", "course_name": "Data Structures and Algorithms", "grade": 95, "max_points": 100, "percentage": 95, "graded_date": "2024-03-05", "type": "Lab"},
+                {"assignment_title": "SQL Query Assignment", "course_name": "Database Systems", "grade": 88, "max_points": 100, "percentage": 88, "graded_date": "2024-03-04", "type": "Assignment"},
+                {"assignment_title": "JavaScript Functions Quiz", "course_name": "Web Development", "grade": 92, "max_points": 100, "percentage": 92, "graded_date": "2024-03-03", "type": "Quiz"},
+                {"assignment_title": "Requirements Analysis", "course_name": "Software Engineering", "grade": 97, "max_points": 100, "percentage": 97, "graded_date": "2024-03-02", "type": "Assignment"},
+                {"assignment_title": "OSI Model Exam", "course_name": "Computer Networks", "grade": 85, "max_points": 100, "percentage": 85, "graded_date": "2024-03-01", "type": "Exam"},
+                {"assignment_title": "Hash Table Implementation", "course_name": "Data Structures and Algorithms", "grade": 93, "max_points": 100, "percentage": 93, "graded_date": "2024-02-28", "type": "Programming"}
             ],
             "course_progress": [
-                {"course_name": "Introduction to Programming", "progress": 80},
-                {"course_name": "Data Structures and Algorithms", "progress": 65}
-            ]
+                {"course_name": "Introduction to Programming", "progress": 95, "current_module": "Final Project", "modules_completed": 12, "total_modules": 12},
+                {"course_name": "Data Structures and Algorithms", "progress": 78, "current_module": "Graph Algorithms", "modules_completed": 9, "total_modules": 12},
+                {"course_name": "Database Systems", "progress": 65, "current_module": "Query Optimization", "modules_completed": 8, "total_modules": 12},
+                {"course_name": "Web Development", "progress": 72, "current_module": "React Hooks", "modules_completed": 9, "total_modules": 12},
+                {"course_name": "Software Engineering", "progress": 83, "current_module": "Testing Strategies", "modules_completed": 10, "total_modules": 12},
+                {"course_name": "Computer Networks", "progress": 58, "current_module": "Network Security", "modules_completed": 7, "total_modules": 12}
+            ],
+            "notifications": [
+                {"id": 1, "title": "Assignment Reminder", "message": "Binary Search Tree Implementation is due in 3 days", "type": "assignment", "priority": "high", "timestamp": "2024-03-09T10:00:00", "read": False},
+                {"id": 2, "title": "Grade Posted", "message": "Your grade for Sorting Algorithms Lab has been posted: 95/100", "type": "grade", "priority": "medium", "timestamp": "2024-03-05T14:30:00", "read": False},
+                {"id": 3, "title": "Course Announcement", "message": "Database Systems: Office hours moved to Fridays 2-4 PM", "type": "announcement", "priority": "low", "timestamp": "2024-03-04T09:15:00", "read": True},
+                {"id": 4, "title": "Study Group", "message": "Join the CS201 study group for exam preparation", "type": "social", "priority": "medium", "timestamp": "2024-03-03T16:45:00", "read": True}
+            ],
+            "achievements": [
+                {"id": 1, "title": "Dean's List", "description": "Achieved GPA above 3.5 for consecutive semesters", "icon": "🏆", "earned_date": "2024-01-15", "category": "academic"},
+                {"id": 2, "title": "Perfect Attendance", "description": "100% attendance in Software Engineering", "icon": "📅", "earned_date": "2024-02-28", "category": "attendance"},
+                {"id": 3, "title": "Code Master", "description": "Completed 10 programming assignments with A grades", "icon": "💻", "earned_date": "2024-03-01", "category": "programming"},
+                {"id": 4, "title": "Team Player", "description": "Excellent collaboration in group projects", "icon": "🤝", "earned_date": "2024-02-15", "category": "collaboration"}
+            ],
+            "study_schedule": [
+                {"day": "Monday", "time": "09:00-10:30", "activity": "CS201 Lecture", "location": "Room 101", "type": "lecture"},
+                {"day": "Monday", "time": "14:00-15:30", "activity": "CS301 Lab", "location": "Computer Lab A", "type": "lab"},
+                {"day": "Tuesday", "time": "10:00-11:30", "activity": "CS350 Lecture", "location": "Room 205", "type": "lecture"},
+                {"day": "Tuesday", "time": "15:00-16:00", "activity": "Study Group - Algorithms", "location": "Library Room 3", "type": "study"},
+                {"day": "Wednesday", "time": "09:00-10:30", "activity": "CS401 Lecture", "location": "Room 301", "type": "lecture"},
+                {"day": "Wednesday", "time": "11:00-12:30", "activity": "CS250 Workshop", "location": "Design Lab", "type": "workshop"},
+                {"day": "Thursday", "time": "10:00-11:30", "activity": "CS350 Lecture", "location": "Room 205", "type": "lecture"},
+                {"day": "Thursday", "time": "14:00-16:00", "activity": "Office Hours - Dr. Chen", "location": "Faculty Office 12", "type": "office_hours"},
+                {"day": "Friday", "time": "09:00-10:30", "activity": "CS201 Lecture", "location": "Room 101", "type": "lecture"},
+                {"day": "Friday", "time": "13:00-15:00", "activity": "Project Work Time", "location": "Study Hall", "type": "study"}
+            ],
+            "quick_stats": {
+                "assignments_this_week": 3,
+                "quizzes_this_week": 1,
+                "study_hours_this_week": 18,
+                "attendance_rate": 92,
+                "current_streak": {"type": "assignment_submission", "count": 12, "description": "assignments submitted on time"},
+                "next_deadline": {"title": "Binary Search Tree Implementation", "course": "CS201", "hours_remaining": 72}
+            }
         }
     else:
         # Admin mock data matching frontend expectations
@@ -374,6 +426,281 @@ async def get_dashboard_data(role: str = "admin"):
             "system_status": "All systems operational",
             # Optionally add more fields if needed by the frontend
         }
+
+# Demo-friendly endpoints for dashboard data (no authentication required)
+@app.get("/api/demo/users/recent")
+async def get_recent_users_demo():
+    """Get recent users for demo dashboard"""
+    return {
+        "users": [
+            {
+                "id": 1,
+                "name": "Alice Johnson",
+                "email": "alice.johnson@university.edu",
+                "role": "student",
+                "department": "Computer Science",
+                "created_at": "2024-01-15T10:30:00Z",
+                "is_active": True
+            },
+            {
+                "id": 2,
+                "name": "Bob Smith",
+                "email": "bob.smith@university.edu",
+                "role": "student",
+                "department": "Mathematics",
+                "created_at": "2024-01-14T14:20:00Z",
+                "is_active": True
+            },
+            {
+                "id": 3,
+                "name": "Carol Davis",
+                "email": "carol.davis@university.edu",
+                "role": "student",
+                "department": "Physics",
+                "created_at": "2024-01-13T09:15:00Z",
+                "is_active": True
+            },
+            {
+                "id": 4,
+                "name": "David Wilson",
+                "email": "david.wilson@university.edu",
+                "role": "student",
+                "department": "Chemistry",
+                "created_at": "2024-01-12T16:45:00Z",
+                "is_active": True
+            },
+            {
+                "id": 5,
+                "name": "Eva Brown",
+                "email": "eva.brown@university.edu",
+                "role": "student",
+                "department": "Biology",
+                "created_at": "2024-01-11T11:30:00Z",
+                "is_active": True
+            }
+        ]
+    }
+
+@app.get("/api/demo/courses/recent")
+async def get_recent_courses_demo():
+    """Get recent courses for demo dashboard"""
+    return {
+        "courses": [
+            {
+                "id": 1,
+                "name": "Introduction to Computer Science",
+                "code": "CS101",
+                "department": "Computer Science",
+                "lecturer": "Dr. Sarah Johnson",
+                "enrolled_students": 45,
+                "created_at": "2024-01-10T08:00:00Z",
+                "status": "active"
+            },
+            {
+                "id": 2,
+                "name": "Advanced Mathematics",
+                "code": "MATH301",
+                "department": "Mathematics",
+                "lecturer": "Prof. Michael Chen",
+                "enrolled_students": 32,
+                "created_at": "2024-01-09T10:30:00Z",
+                "status": "active"
+            },
+            {
+                "id": 3,
+                "name": "Physics Laboratory",
+                "code": "PHYS201",
+                "department": "Physics",
+                "lecturer": "Dr. Lisa Anderson",
+                "enrolled_students": 28,
+                "created_at": "2024-01-08T14:15:00Z",
+                "status": "active"
+            }
+        ]
+    }
+
+@app.get("/api/demo/assignments/recent")
+async def get_recent_assignments_demo():
+    """Get recent assignments for demo dashboard"""
+    return {
+        "assignments": [
+            {
+                "id": 1,
+                "title": "Programming Assignment 1",
+                "course": "CS101",
+                "due_date": "2024-02-15T23:59:00Z",
+                "submissions": 38,
+                "total_students": 45,
+                "status": "active"
+            },
+            {
+                "id": 2,
+                "title": "Calculus Problem Set",
+                "course": "MATH301",
+                "due_date": "2024-02-12T23:59:00Z",
+                "submissions": 29,
+                "total_students": 32,
+                "status": "active"
+            },
+            {
+                "id": 3,
+                "title": "Lab Report - Wave Motion",
+                "course": "PHYS201",
+                "due_date": "2024-02-10T23:59:00Z",
+                "submissions": 25,
+                "total_students": 28,
+                "status": "grading"
+            }
+        ]
+    }
+
+# Demo endpoints for user management (no authentication required)
+@app.get("/api/demo/users")
+async def get_demo_users():
+    """Get demo users for user management page"""
+    return {
+        "users": [
+            {
+                "id": 1,
+                "name": "Dr. Sarah Johnson",
+                "email": "sarah.johnson@university.edu",
+                "role": "lecturer",
+                "department": "Computer Science",
+                "employee_id": "EMP001",
+                "is_active": True,
+                "created_at": "2024-01-10T08:00:00Z"
+            },
+            {
+                "id": 2,
+                "name": "Prof. Michael Chen",
+                "email": "michael.chen@university.edu",
+                "role": "lecturer",
+                "department": "Mathematics",
+                "employee_id": "EMP002",
+                "is_active": True,
+                "created_at": "2024-01-09T10:30:00Z"
+            },
+            {
+                "id": 3,
+                "name": "Dr. Lisa Anderson",
+                "email": "lisa.anderson@university.edu",
+                "role": "lecturer",
+                "department": "Physics",
+                "employee_id": "EMP003",
+                "is_active": True,
+                "created_at": "2024-01-08T14:15:00Z"
+            },
+            {
+                "id": 4,
+                "name": "Alice Johnson",
+                "email": "alice.johnson@university.edu",
+                "role": "student",
+                "department": "Computer Science",
+                "student_id": "STU001",
+                "is_active": True,
+                "created_at": "2024-01-15T10:30:00Z"
+            },
+            {
+                "id": 5,
+                "name": "Bob Smith",
+                "email": "bob.smith@university.edu",
+                "role": "student",
+                "department": "Mathematics",
+                "student_id": "STU002",
+                "is_active": True,
+                "created_at": "2024-01-14T14:20:00Z"
+            },
+            {
+                "id": 6,
+                "name": "Carol Davis",
+                "email": "carol.davis@university.edu",
+                "role": "student",
+                "department": "Physics",
+                "student_id": "STU003",
+                "is_active": True,
+                "created_at": "2024-01-13T09:15:00Z"
+            },
+            {
+                "id": 7,
+                "name": "Admin User",
+                "email": "admin@university.edu",
+                "role": "admin",
+                "department": "Administration",
+                "employee_id": "ADM001",
+                "is_active": True,
+                "created_at": "2024-01-01T00:00:00Z"
+            }
+        ]
+    }
+
+@app.get("/api/demo/users/by-role/{role}")
+async def get_demo_users_by_role(role: str):
+    """Get demo users by role"""
+    all_users = [
+        {
+            "id": 1,
+            "name": "Dr. Sarah Johnson",
+            "email": "sarah.johnson@university.edu",
+            "role": "lecturer",
+            "department": "Computer Science",
+            "employee_id": "EMP001",
+            "is_active": True,
+            "created_at": "2024-01-10T08:00:00Z"
+        },
+        {
+            "id": 2,
+            "name": "Prof. Michael Chen",
+            "email": "michael.chen@university.edu",
+            "role": "lecturer",
+            "department": "Mathematics",
+            "employee_id": "EMP002",
+            "is_active": True,
+            "created_at": "2024-01-09T10:30:00Z"
+        },
+        {
+            "id": 3,
+            "name": "Dr. Lisa Anderson",
+            "email": "lisa.anderson@university.edu",
+            "role": "lecturer",
+            "department": "Physics",
+            "employee_id": "EMP003",
+            "is_active": True,
+            "created_at": "2024-01-08T14:15:00Z"
+        },
+        {
+            "id": 4,
+            "name": "Alice Johnson",
+            "email": "alice.johnson@university.edu",
+            "role": "student",
+            "department": "Computer Science",
+            "student_id": "STU001",
+            "is_active": True,
+            "created_at": "2024-01-15T10:30:00Z"
+        },
+        {
+            "id": 5,
+            "name": "Bob Smith",
+            "email": "bob.smith@university.edu",
+            "role": "student",
+            "department": "Mathematics",
+            "student_id": "STU002",
+            "is_active": True,
+            "created_at": "2024-01-14T14:20:00Z"
+        },
+        {
+            "id": 6,
+            "name": "Carol Davis",
+            "email": "carol.davis@university.edu",
+            "role": "student",
+            "department": "Physics",
+            "student_id": "STU003",
+            "is_active": True,
+            "created_at": "2024-01-13T09:15:00Z"
+        }
+    ]
+
+    filtered_users = [user for user in all_users if user["role"] == role.lower()]
+    return {"users": filtered_users}
 
 # ============================================================================
 # MasterLMS Endpoints
@@ -795,6 +1122,89 @@ async def get_all_users(
     db: Session = Depends(get_db)
 ):
     try:
+        # In demo mode, return demo data (when JWT_SECRET_KEY is not set or is demo/dev key)
+        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
+            # Return demo users
+            all_users = [
+                {
+                    "id": 1,
+                    "name": "Dr. Sarah Johnson",
+                    "email": "sarah.johnson@university.edu",
+                    "role": "lecturer",
+                    "department": "Computer Science",
+                    "employee_id": "EMP001",
+                    "is_active": True,
+                    "created_at": "2024-01-10T08:00:00Z"
+                },
+                {
+                    "id": 2,
+                    "name": "Prof. Michael Chen",
+                    "email": "michael.chen@university.edu",
+                    "role": "lecturer",
+                    "department": "Mathematics",
+                    "employee_id": "EMP002",
+                    "is_active": True,
+                    "created_at": "2024-01-09T10:30:00Z"
+                },
+                {
+                    "id": 3,
+                    "name": "Dr. Lisa Anderson",
+                    "email": "lisa.anderson@university.edu",
+                    "role": "lecturer",
+                    "department": "Physics",
+                    "employee_id": "EMP003",
+                    "is_active": True,
+                    "created_at": "2024-01-08T14:15:00Z"
+                },
+                {
+                    "id": 4,
+                    "name": "Alice Johnson",
+                    "email": "alice.johnson@university.edu",
+                    "role": "student",
+                    "department": "Computer Science",
+                    "student_id": "STU001",
+                    "is_active": True,
+                    "created_at": "2024-01-15T10:30:00Z"
+                },
+                {
+                    "id": 5,
+                    "name": "Bob Smith",
+                    "email": "bob.smith@university.edu",
+                    "role": "student",
+                    "department": "Mathematics",
+                    "student_id": "STU002",
+                    "is_active": True,
+                    "created_at": "2024-01-14T14:20:00Z"
+                },
+                {
+                    "id": 6,
+                    "name": "Carol Davis",
+                    "email": "carol.davis@university.edu",
+                    "role": "student",
+                    "department": "Physics",
+                    "student_id": "STU003",
+                    "is_active": True,
+                    "created_at": "2024-01-13T09:15:00Z"
+                },
+                {
+                    "id": 7,
+                    "name": "Admin User",
+                    "email": "admin@university.edu",
+                    "role": "admin",
+                    "department": "Administration",
+                    "employee_id": "ADM001",
+                    "is_active": True,
+                    "created_at": "2024-01-01T00:00:00Z"
+                }
+            ]
+
+            if role:
+                filtered_users = [user for user in all_users if user["role"] == role.lower()]
+                return {"users": filtered_users}
+
+            return {"users": all_users}
+
         # Only allow admins to view user lists
         if current_user.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -832,6 +1242,75 @@ async def get_users_by_role(
     db: Session = Depends(get_db)
 ):
     try:
+        # In demo mode, return demo data (when JWT_SECRET_KEY is not set or is demo/dev key)
+        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower():
+            all_users = [
+                {
+                    "id": 1,
+                    "name": "Dr. Sarah Johnson",
+                    "email": "sarah.johnson@university.edu",
+                    "role": "lecturer",
+                    "department": "Computer Science",
+                    "employee_id": "EMP001",
+                    "is_active": True,
+                    "created_at": "2024-01-10T08:00:00Z"
+                },
+                {
+                    "id": 2,
+                    "name": "Prof. Michael Chen",
+                    "email": "michael.chen@university.edu",
+                    "role": "lecturer",
+                    "department": "Mathematics",
+                    "employee_id": "EMP002",
+                    "is_active": True,
+                    "created_at": "2024-01-09T10:30:00Z"
+                },
+                {
+                    "id": 3,
+                    "name": "Dr. Lisa Anderson",
+                    "email": "lisa.anderson@university.edu",
+                    "role": "lecturer",
+                    "department": "Physics",
+                    "employee_id": "EMP003",
+                    "is_active": True,
+                    "created_at": "2024-01-08T14:15:00Z"
+                },
+                {
+                    "id": 4,
+                    "name": "Alice Johnson",
+                    "email": "alice.johnson@university.edu",
+                    "role": "student",
+                    "department": "Computer Science",
+                    "student_id": "STU001",
+                    "is_active": True,
+                    "created_at": "2024-01-15T10:30:00Z"
+                },
+                {
+                    "id": 5,
+                    "name": "Bob Smith",
+                    "email": "bob.smith@university.edu",
+                    "role": "student",
+                    "department": "Mathematics",
+                    "student_id": "STU002",
+                    "is_active": True,
+                    "created_at": "2024-01-14T14:20:00Z"
+                },
+                {
+                    "id": 6,
+                    "name": "Carol Davis",
+                    "email": "carol.davis@university.edu",
+                    "role": "student",
+                    "department": "Physics",
+                    "student_id": "STU003",
+                    "is_active": True,
+                    "created_at": "2024-01-13T09:15:00Z"
+                }
+            ]
+
+            filtered_users = [user for user in all_users if user["role"] == role.lower()]
+            return {"users": filtered_users}
+
         # Only allow admins to view user lists
         if current_user.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -1098,6 +1577,55 @@ async def mark_notification_read(notification_id: int):
     raise HTTPException(status_code=404, detail="Notification not found")
 
 # Student-specific endpoints
+@app.get("/api/student/notifications")
+async def get_student_notifications():
+    """Get student notifications"""
+    return {
+        "notifications": [
+            {"id": 1, "title": "Assignment Reminder", "message": "Binary Search Tree Implementation is due in 3 days", "type": "assignment", "priority": "high", "timestamp": "2024-03-09T10:00:00", "read": False},
+            {"id": 2, "title": "Grade Posted", "message": "Your grade for Sorting Algorithms Lab has been posted: 95/100", "type": "grade", "priority": "medium", "timestamp": "2024-03-05T14:30:00", "read": False},
+            {"id": 3, "title": "Course Announcement", "message": "Database Systems: Office hours moved to Fridays 2-4 PM", "type": "announcement", "priority": "low", "timestamp": "2024-03-04T09:15:00", "read": True},
+            {"id": 4, "title": "Study Group", "message": "Join the CS201 study group for exam preparation", "type": "social", "priority": "medium", "timestamp": "2024-03-03T16:45:00", "read": True},
+            {"id": 5, "title": "Library Hours Extended", "message": "Library will be open 24/7 during finals week", "type": "announcement", "priority": "low", "timestamp": "2024-03-02T12:00:00", "read": True}
+        ]
+    }
+
+@app.get("/api/student/achievements")
+async def get_student_achievements():
+    """Get student achievements and badges"""
+    return {
+        "achievements": [
+            {"id": 1, "title": "Dean's List", "description": "Achieved GPA above 3.5 for consecutive semesters", "icon": "🏆", "earned_date": "2024-01-15", "category": "academic", "points": 100},
+            {"id": 2, "title": "Perfect Attendance", "description": "100% attendance in Software Engineering", "icon": "📅", "earned_date": "2024-02-28", "category": "attendance", "points": 50},
+            {"id": 3, "title": "Code Master", "description": "Completed 10 programming assignments with A grades", "icon": "💻", "earned_date": "2024-03-01", "category": "programming", "points": 75},
+            {"id": 4, "title": "Team Player", "description": "Excellent collaboration in group projects", "icon": "🤝", "earned_date": "2024-02-15", "category": "collaboration", "points": 60},
+            {"id": 5, "title": "Early Bird", "description": "Submitted 5 assignments before deadline", "icon": "🌅", "earned_date": "2024-02-10", "category": "punctuality", "points": 40},
+            {"id": 6, "title": "Research Scholar", "description": "Completed advanced research project", "icon": "🔬", "earned_date": "2024-01-30", "category": "research", "points": 90}
+        ],
+        "total_points": 415,
+        "next_milestone": {"title": "Honor Roll", "points_needed": 85, "description": "Earn 500 achievement points"}
+    }
+
+@app.get("/api/student/schedule")
+async def get_student_schedule():
+    """Get student weekly schedule"""
+    return {
+        "schedule": [
+            {"day": "Monday", "time": "09:00-10:30", "activity": "CS201 Lecture", "location": "Room 101", "type": "lecture", "instructor": "Dr. Michael Chen"},
+            {"day": "Monday", "time": "14:00-15:30", "activity": "CS301 Lab", "location": "Computer Lab A", "type": "lab", "instructor": "Prof. Lisa Anderson"},
+            {"day": "Tuesday", "time": "10:00-11:30", "activity": "CS350 Lecture", "location": "Room 205", "type": "lecture", "instructor": "Dr. Emily Davis"},
+            {"day": "Tuesday", "time": "15:00-16:00", "activity": "Study Group - Algorithms", "location": "Library Room 3", "type": "study", "instructor": "Student Led"},
+            {"day": "Wednesday", "time": "09:00-10:30", "activity": "CS401 Lecture", "location": "Room 301", "type": "lecture", "instructor": "Prof. Robert Brown"},
+            {"day": "Wednesday", "time": "11:00-12:30", "activity": "CS250 Workshop", "location": "Design Lab", "type": "workshop", "instructor": "Dr. James Wilson"},
+            {"day": "Thursday", "time": "10:00-11:30", "activity": "CS350 Lecture", "location": "Room 205", "type": "lecture", "instructor": "Dr. Emily Davis"},
+            {"day": "Thursday", "time": "14:00-16:00", "activity": "Office Hours - Dr. Chen", "location": "Faculty Office 12", "type": "office_hours", "instructor": "Dr. Michael Chen"},
+            {"day": "Friday", "time": "09:00-10:30", "activity": "CS201 Lecture", "location": "Room 101", "type": "lecture", "instructor": "Dr. Michael Chen"},
+            {"day": "Friday", "time": "13:00-15:00", "activity": "Project Work Time", "location": "Study Hall", "type": "study", "instructor": "Self-directed"}
+        ],
+        "next_class": {"activity": "CS201 Lecture", "time": "09:00", "location": "Room 101", "instructor": "Dr. Michael Chen"},
+        "today_summary": {"total_classes": 3, "total_hours": 4.5, "free_time": "2 hours"}
+    }
+
 @app.get("/api/student/enrollments")
 async def get_student_enrollments():
     return {"enrollments": MOCK_ENROLLMENTS}
@@ -3381,6 +3909,12 @@ async def get_student_quiz_attempts(
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# Cache test endpoint
+@app.get("/api/cache-test")
+async def cache_test():
+    import random
+    return {"timestamp": datetime.now(timezone.utc).isoformat(), "random": random.randint(1000, 9999), "message": "This should change on every request"}
+
 @app.get("/api/courses/{course_id}")
 async def get_course_details(
     course_id: int,
@@ -4643,14 +5177,22 @@ async def create_discussion_reply(discussion_id: int, request: dict):
     return {"reply": {"id": 999, **request}, "message": "Reply created successfully"}
 
 if __name__ == "__main__":
+    import os
+
     # Database is initialized automatically in initialize_fresh_database()
     # No need for additional seeding here
+
+    # Use Railway's dynamic PORT or fallback to 8000 for development
+    port = int(os.getenv("PORT", 8000))
+
+    # Disable reload in production
+    reload = os.getenv("ENVIRONMENT", "development") == "development"
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True
+        port=port,
+        reload=reload
     )
 
 

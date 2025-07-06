@@ -56,8 +56,9 @@ const StudentDashboard: React.FC = () => {
       setLoading(true);
       console.log('Fetching dashboard data for user:', _user?.id);
       
-      const response = await fetch("/api/dashboard", {
+      const response = await fetch(`/api/dashboard?role=student&t=${Date.now()}`, {
         credentials: "include",
+        cache: "no-cache",
       });
 
       console.log('Dashboard response status:', response.status);
@@ -70,6 +71,7 @@ const StudentDashboard: React.FC = () => {
           console.error("Invalid JSON response", e);
         }
         console.log('Dashboard data received:', data);
+        console.log('Setting dashboard data at:', new Date().toISOString());
         setDashboardData(data);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -133,19 +135,60 @@ const StudentDashboard: React.FC = () => {
   const totalCourses = dashboardData.total_courses || 0;
   const completedAssignments = dashboardData.completed_assignments || 0;
 
+  // Debug logging
+  console.log('Dashboard render data:', {
+    dashboardData,
+    academicProgress,
+    enrollments: enrollments.length,
+    upcomingAssignments: upcomingAssignments.length,
+    totalCourses,
+    completedAssignments
+  });
+
+  // Temporary debug display
+  const showDebugInfo = true;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div key={`dashboard-${Date.now()}`} className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {_user?.name}!
-          </h1>
-          <p className="text-gray-600">
-            {currentSemester.name} •{" "}
-            {totalCourses} courses enrolled
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back, {_user?.name}!
+              </h1>
+              <p className="text-gray-600">
+                {currentSemester.name} •{" "}
+                {totalCourses} courses enrolled
+              </p>
+            </div>
+            <button
+              onClick={fetchDashboardData}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
+              disabled={loading}
+            >
+              {loading ? 'Refreshing...' : 'Refresh Data'}
+            </button>
+          </div>
         </div>
+
+        {/* Debug Info */}
+        {showDebugInfo && (
+          <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Info</h3>
+            <div className="text-sm text-yellow-700">
+              <p><strong>Raw Data:</strong></p>
+              <p>GPA: {academicProgress.gpa}</p>
+              <p>Credits Earned: {academicProgress.credits_earned}</p>
+              <p>Total Courses: {totalCourses}</p>
+              <p>Completed Assignments: {completedAssignments}</p>
+              <p>Enrollments: {enrollments.length}</p>
+              <p>Upcoming Assignments: {upcomingAssignments.length}</p>
+              <p>Data Timestamp: {dashboardData ? 'Data loaded' : 'No data'}</p>
+            </div>
+          </div>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

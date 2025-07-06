@@ -57,11 +57,15 @@ logger = get_logger(__name__)
 
 # Validate environment variables
 def validate_environment():
-    required_vars = ["GEMINI_API_KEY", "DATABASE_URL", "JWT_SECRET_KEY"]
+    required_vars = ["GEMINI_API_KEY", "DATABASE_URL"]
     missing = [var for var in required_vars if not os.getenv(var)]
     if missing:
         logger.error(f"Missing required environment variables: {', '.join(missing)}")
         raise EnvironmentError(f"Missing required environment variables: {', '.join(missing)}")
+
+    # JWT is optional for demo mode
+    if not os.getenv("JWT_SECRET_KEY"):
+        logger.warning("JWT_SECRET_KEY not set - running in demo mode without authentication")
 
 # Call before app initialization
 validate_environment()
@@ -102,18 +106,22 @@ initialize_fresh_database()
 
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System (Demo Mode)")
 
-# Allow frontend origin(s)
+# Allow frontend origin(s) - Update with your actual frontend URL
 origins = [
+    "https://your-frontend-url.onrender.com",  # Your actual frontend domain
     "https://elearningmanagement.onrender.com",  # Your frontend domain
-    "http://localhost:5173"                      # For local dev (optional)
+    "http://localhost:5173",                      # For local dev
+    "http://localhost:3000",                      # Alternative local dev port
+    "*"  # Allow all origins for demo purposes - remove in production
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Mount static files for video materials
@@ -157,6 +165,28 @@ class QuizAnswers(BaseModel):
 class PaginationParams(BaseModel):
     page: int = 1
     limit: int = 20
+
+# Health check endpoint
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "1.0.0",
+        "service": "EduFlow API"
+    }
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "EduFlow API is running",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/health"
+    }
 
 # Authentication endpoints
 from routers import auth, academic

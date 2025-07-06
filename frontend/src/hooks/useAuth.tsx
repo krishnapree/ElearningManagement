@@ -24,9 +24,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userData = JSON.parse(selectedUser);
         setUser(userData);
       } else {
+        // Check if we're on a protected route and redirect to home if no user
+        const currentPath = window.location.pathname;
+        const protectedRoutes = ['/dashboard', '/ask', '/quiz', '/courses', '/enrollments',
+                               '/my-assignments', '/my-grades', '/academic-records',
+                               '/course-materials', '/discussions', '/student-assessments',
+                               '/lecturer-course-management', '/lecturer-assessments',
+                               '/my-courses', '/students', '/departments', '/programs',
+                               '/user-management', '/assignments', '/course-management',
+                               '/course-analytics', '/campus-coordination', '/profile',
+                               '/settings', '/my-programs', '/course-details'];
+
+        if (protectedRoutes.some(route => currentPath.startsWith(route))) {
+          window.location.href = '/';
+          return;
+        }
         setUser(null);
       }
     } catch (error) {
+      console.error('Auth check error:', error);
       setUser(null);
     } finally {
       setLoading(false);

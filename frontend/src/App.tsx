@@ -33,6 +33,7 @@ import CampusCoordination from "./pages/CampusCoordination";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
 import CourseDetails from "./pages/CourseDetails";
+import NotFound from "./pages/NotFound";
 import { useAuth } from "./hooks/useAuth";
 
 function App() {
@@ -119,6 +120,9 @@ function App() {
           <Route path="/my-programs" element={<LecturerPrograms />} />
           <Route path="/course-details" element={<CourseDetails />} />
           <Route path="/courses/:courseId" element={<CourseDetails />} />
+
+          {/* Catch-all route for 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>

@@ -5,9 +5,10 @@
   "main": "tailwind.config.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp static.json dist/static.json",
+    "build": "tsc && vite build && cp static.json dist/",
+    "build:render": "npm run build",
     "serve": "vite preview",
-    "postinstall": "chmod +x node_modules/.bin/vite"
+    "postinstall": "chmod +x node_modules/.bin/vite || true"
   },
   "keywords": [
     "education",
@@ -35,6 +36,7 @@
     "vite": "^6.3.5"
   },
   "devDependencies": {
+    "cpx": "^1.5.0",
     "typescript": "^5.8.3"
   }
 }

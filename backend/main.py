@@ -55,13 +55,19 @@ from utils.validation import (
 setup_logger()
 logger = get_logger(__name__)
 
-# Validate environment variables
+# Validate environment variables - relaxed for demo deployment
 def validate_environment():
-    required_vars = ["GEMINI_API_KEY", "DATABASE_URL"]
-    missing = [var for var in required_vars if not os.getenv(var)]
-    if missing:
-        logger.error(f"Missing required environment variables: {', '.join(missing)}")
-        raise EnvironmentError(f"Missing required environment variables: {', '.join(missing)}")
+    # Only DATABASE_URL is truly required, others are optional for demo mode
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        logger.warning("DATABASE_URL not set - using SQLite fallback")
+
+    # AI API keys are optional for demo mode
+    if not os.getenv("GEMINI_API_KEY"):
+        logger.warning("GEMINI_API_KEY not set - AI features will be limited")
+
+    if not os.getenv("OPENAI_API_KEY"):
+        logger.warning("OPENAI_API_KEY not set - AI features will be limited")
 
     # JWT is optional for demo mode
     if not os.getenv("JWT_SECRET_KEY"):
@@ -107,7 +113,7 @@ initialize_fresh_database()
 app = FastAPI(title="EduFlow API", version="1.0.0", description="AI-Powered Learning Management System (Demo Mode)")
 
 # Allow frontend origin(s) - Update with your actual frontend URL
-# Configure CORS origins from environment variable for Railway deployment
+# Configure CORS origins from environment variable for Render deployment
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 if cors_origins_env:
     origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
@@ -116,8 +122,11 @@ else:
     origins = [
         "http://localhost:5173",                      # For local dev
         "http://localhost:3000",                      # Alternative local dev port
-        "*"  # Allow all origins for demo purposes - remove in production
+        "https://*.onrender.com",                     # Render frontend domains
     ]
+    # Only allow wildcard in development
+    if os.getenv("ENVIRONMENT", "development") == "development":
+        origins.append("*")
 
 app.add_middleware(
     CORSMiddleware,

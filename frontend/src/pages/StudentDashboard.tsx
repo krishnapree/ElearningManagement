@@ -30,6 +30,8 @@ interface StudentDashboard {
     due_date: string;
     max_points: number;
     days_until_due: number;
+    type?: string;
+    difficulty?: string;
   }>;
   academic_progress: {
     gpa?: number;
@@ -39,6 +41,62 @@ interface StudentDashboard {
   };
   total_courses: number;
   completed_assignments: number;
+  recent_grades?: Array<{
+    assignment_title: string;
+    course_name: string;
+    grade: number;
+    max_points: number;
+    percentage: number;
+    graded_date: string;
+    type: string;
+  }>;
+  course_progress?: Array<{
+    course_name: string;
+    progress: number;
+    current_module: string;
+    modules_completed: number;
+    total_modules: number;
+  }>;
+  notifications?: Array<{
+    id: number;
+    title: string;
+    message: string;
+    type: string;
+    priority: string;
+    timestamp: string;
+    read: boolean;
+  }>;
+  achievements?: Array<{
+    id: number;
+    title: string;
+    description: string;
+    icon: string;
+    earned_date: string;
+    category: string;
+  }>;
+  study_schedule?: Array<{
+    day: string;
+    time: string;
+    activity: string;
+    location: string;
+    type: string;
+  }>;
+  quick_stats?: {
+    assignments_this_week: number;
+    quizzes_this_week: number;
+    study_hours_this_week: number;
+    attendance_rate: number;
+    current_streak: {
+      type: string;
+      count: number;
+      description: string;
+    };
+    next_deadline: {
+      title: string;
+      course: string;
+      hours_remaining: number;
+    };
+  };
 }
 
 const StudentDashboard: React.FC = () => {
@@ -119,6 +177,12 @@ const StudentDashboard: React.FC = () => {
   const academicProgress = dashboardData.academic_progress || { gpa: null, total_credits: 0, credits_earned: 0, completion_percentage: 0 };
   const totalCourses = dashboardData.total_courses || 0;
   const completedAssignments = dashboardData.completed_assignments || 0;
+  const recentGrades = dashboardData.recent_grades || [];
+  const courseProgress = dashboardData.course_progress || [];
+  const notifications = dashboardData.notifications || [];
+  const achievements = dashboardData.achievements || [];
+  const studySchedule = dashboardData.study_schedule || [];
+  const quickStats = dashboardData.quick_stats || null;
 
   // Debug logging
   console.log('Dashboard render data:', {
@@ -162,15 +226,25 @@ const StudentDashboard: React.FC = () => {
         {showDebugInfo && (
           <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Info</h3>
-            <div className="text-sm text-yellow-700">
-              <p><strong>Raw Data:</strong></p>
-              <p>GPA: {academicProgress.gpa}</p>
-              <p>Credits Earned: {academicProgress.credits_earned}</p>
-              <p>Total Courses: {totalCourses}</p>
-              <p>Completed Assignments: {completedAssignments}</p>
-              <p>Enrollments: {enrollments.length}</p>
-              <p>Upcoming Assignments: {upcomingAssignments.length}</p>
-              <p>Data Timestamp: {dashboardData ? 'Data loaded' : 'No data'}</p>
+            <div className="text-sm text-yellow-700 grid grid-cols-2 gap-4">
+              <div>
+                <p><strong>Basic Data:</strong></p>
+                <p>GPA: {academicProgress.gpa}</p>
+                <p>Credits Earned: {academicProgress.credits_earned}</p>
+                <p>Total Courses: {totalCourses}</p>
+                <p>Completed Assignments: {completedAssignments}</p>
+                <p>Enrollments: {enrollments.length}</p>
+                <p>Upcoming Assignments: {upcomingAssignments.length}</p>
+              </div>
+              <div>
+                <p><strong>Extended Data:</strong></p>
+                <p>Recent Grades: {recentGrades.length}</p>
+                <p>Course Progress: {courseProgress.length}</p>
+                <p>Notifications: {notifications.length}</p>
+                <p>Achievements: {achievements.length}</p>
+                <p>Study Schedule: {studySchedule.length}</p>
+                <p>Quick Stats: {quickStats ? 'Available' : 'Missing'}</p>
+              </div>
             </div>
           </div>
         )}
@@ -414,6 +488,81 @@ const StudentDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Additional Data Sections */}
+        {recentGrades.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Grades</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignment</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {recentGrades.slice(0, 5).map((grade, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{grade.assignment_title}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{grade.course_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`text-sm font-medium ${getGradeColor(grade.percentage.toString())}`}>
+                            {grade.grade}/{grade.max_points} ({grade.percentage}%)
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(grade.graded_date).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications */}
+        {notifications.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Notifications</h2>
+            <div className="space-y-3">
+              {notifications.slice(0, 4).map((notification) => (
+                <div key={notification.id} className={`p-4 rounded-lg border ${notification.read ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3 ${notification.read ? 'bg-gray-400' : 'bg-blue-500'}`}></div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900">{notification.title}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                      <p className="text-xs text-gray-500 mt-2">{new Date(notification.timestamp).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Achievements */}
+        {achievements.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Achievements</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {achievements.map((achievement) => (
+                <div key={achievement.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+                  <div className="text-3xl mb-2">{achievement.icon}</div>
+                  <h3 className="font-medium text-gray-900 mb-1">{achievement.title}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{achievement.description}</p>
+                  <p className="text-xs text-gray-500">Earned: {new Date(achievement.earned_date).toLocaleDateString()}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -44,12 +44,22 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.request<{ users: User[] }>("/users", { credentials: "include" });
-      setUsers(data.users || []);
       setError(null);
+      console.log("Fetching users from /api/users...");
+
+      const data = await apiClient.request<{ users: User[] }>("/users", { credentials: "include" });
+      console.log("Users API response:", data);
+
+      if (data && data.users && Array.isArray(data.users)) {
+        setUsers(data.users);
+        console.log(`Successfully loaded ${data.users.length} users`);
+      } else {
+        console.error("Invalid response format:", data);
+        setError("Invalid response format from server");
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
-      setError("Failed to fetch users");
+      setError(`Failed to fetch users: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -188,6 +198,23 @@ const UserManagement: React.FC = () => {
             <i className="fas fa-user-plus mr-2"></i>
             Add User
           </button>
+        </div>
+
+        {/* Debug Info */}
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Info</h3>
+          <div className="text-sm text-yellow-700">
+            <p><strong>Users loaded:</strong> {users.length}</p>
+            <p><strong>Loading state:</strong> {loading ? 'Loading...' : 'Complete'}</p>
+            <p><strong>Error state:</strong> {error || 'None'}</p>
+            <p><strong>API endpoint:</strong> /api/users</p>
+            <button
+              onClick={fetchUsers}
+              className="mt-2 px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+            >
+              Retry Fetch
+            </button>
+          </div>
         </div>
 
         {error && (

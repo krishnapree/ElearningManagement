@@ -27,7 +27,7 @@ from models import (
     Message, Notification, Department, Program, Semester, SemesterType,
     ProgramLecturer, ProgramCourse
 )
-from auth import AuthManager, get_current_user
+from auth import AuthManager, get_current_user, get_current_user_optional
 from services.gemini_service import GeminiService
 from services.whisper_service import WhisperService
 from services.gemini_speech_service import GeminiSpeechService

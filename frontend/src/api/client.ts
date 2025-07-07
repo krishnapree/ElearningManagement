@@ -44,8 +44,9 @@ class APIClient {
         console.error("Invalid JSON response", e);
       }
       return data;
-    } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`API request failed: ${endpoint}`, errorMessage);
       throw error;
     }
   }

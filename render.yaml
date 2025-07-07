@@ -29,7 +29,7 @@ services:
     rootDir: frontend
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://elearningmanagement.onrender.com
       - key: VITE_NODE_ENV
         value: production
     headers:

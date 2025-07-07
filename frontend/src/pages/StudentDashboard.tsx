@@ -113,13 +113,10 @@ const StudentDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching dashboard data for user:', _user?.id);
       const data = await apiClient.request<StudentDashboard>(`/dashboard?role=student&t=${Date.now()}`, {
         credentials: "include",
         cache: "no-cache",
       });
-      console.log('Dashboard data received:', data);
-      console.log('Setting dashboard data at:', new Date().toISOString());
       setDashboardData(data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
@@ -184,18 +181,10 @@ const StudentDashboard: React.FC = () => {
   const studySchedule = dashboardData.study_schedule || [];
   const quickStats = dashboardData.quick_stats || null;
 
-  // Debug logging
-  console.log('Dashboard render data:', {
-    dashboardData,
-    academicProgress,
-    enrollments: enrollments.length,
-    upcomingAssignments: upcomingAssignments.length,
-    totalCourses,
-    completedAssignments
-  });
+
 
   // Temporary debug display
-  const showDebugInfo = true;
+  const showDebugInfo = false;
 
   return (
     <div key={`dashboard-${Date.now()}`} className="min-h-screen bg-gray-50">

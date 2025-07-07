@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiClient } from "../api/client";
 
 interface Program {
   id: number;
@@ -113,14 +114,8 @@ const ProgramManagement: React.FC = () => {
   const fetchPrograms = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/academic/programs", {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPrograms(data.programs || []);
-      }
+      const data = await apiClient.request<{ programs: Program[] }>("/academic/programs");
+      setPrograms(data.programs || []);
     } catch (error) {
       console.error("Failed to fetch programs:", error);
     } finally {
@@ -130,11 +125,8 @@ const ProgramManagement: React.FC = () => {
 
   const fetchLecturers = async () => {
     try {
-      const response = await fetch("/api/users?role=lecturer", { credentials: "include" });
-      if (response.ok) {
-        const data = await response.json();
-        setLecturers(data.users || []);
-      }
+      const data = await apiClient.request<{ users: Lecturer[] }>("/users?role=lecturer");
+      setLecturers(data.users || []);
     } catch (error) {
       console.error("Failed to fetch lecturers:", error);
     }

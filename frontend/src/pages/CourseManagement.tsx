@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { apiClient } from "../api/client";
 
 interface Course {
   id: number;
@@ -82,31 +83,16 @@ const CourseManagement: React.FC = () => {
       setLoading(true);
 
       // Fetch courses
-      const coursesResponse = await fetch("/api/academic/courses", {
-        credentials: "include",
-      });
-      if (coursesResponse.ok) {
-        const coursesData = await coursesResponse.json();
-        setCourses(coursesData.courses);
-      }
+      const coursesData = await apiClient.request<{ courses: Course[] }>("/academic/courses");
+      setCourses(coursesData.courses || []);
 
       // Fetch departments
-      const deptResponse = await fetch("/api/academic/departments", {
-        credentials: "include",
-      });
-      if (deptResponse.ok) {
-        const deptData = await deptResponse.json();
-        setDepartments(deptData.departments);
-      }
+      const deptData = await apiClient.request<{ departments: Department[] }>("/academic/departments");
+      setDepartments(deptData.departments || []);
 
       // Fetch semesters
-      const semesterResponse = await fetch("/api/academic/semesters", {
-        credentials: "include",
-      });
-      if (semesterResponse.ok) {
-        const semesterData = await semesterResponse.json();
-        setSemesters(semesterData.semesters);
-      }
+      const semesterData = await apiClient.request<{ semesters: Semester[] }>("/academic/semesters");
+      setSemesters(semesterData.semesters || []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {

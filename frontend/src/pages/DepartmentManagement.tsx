@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiClient } from "../api/client";
 
 interface Department {
   id: number;
@@ -48,19 +49,12 @@ const DepartmentManagement: React.FC = () => {
   const fetchDepartments = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/academic/departments", {
-        credentials: "include",
-      });
+      setError(null);
 
-      if (response.ok) {
-        const data = await response.json();
-        setDepartments(data.departments || []);
-      } else {
-        setError("Failed to fetch departments");
-      }
+      const data = await apiClient.request<{ departments: Department[] }>("/academic/departments");
+      setDepartments(data.departments || []);
     } catch (error) {
-      console.error("Error fetching departments:", error);
-      setError("Failed to fetch departments");
+      setError(`Failed to fetch departments: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

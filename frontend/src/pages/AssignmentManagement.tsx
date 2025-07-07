@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiClient } from "../api/client";
 
 interface Assignment {
   id: number;
@@ -77,12 +78,9 @@ const AssignmentManagement: React.FC = () => {
       // Get current user role from localStorage
       const selectedUser = localStorage.getItem('selectedUser');
       const userRole = selectedUser ? JSON.parse(selectedUser).role : 'admin';
-      
-      const response = await fetch(`/api/assignments?role=${userRole}`);
-      if (response.ok) {
-        const data = await response.json();
-        setAssignments(data.assignments || data);
-      }
+
+      const data = await apiClient.request<Assignment[]>(`/assignments?role=${userRole}`);
+      setAssignments(Array.isArray(data) ? data : data.assignments || []);
     } catch (error) {
       console.error("Error fetching assignments:", error);
     } finally {

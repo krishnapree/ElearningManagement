@@ -42,16 +42,11 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching admin dashboard data...");
-
       // Use API client for proper URL handling
       const data = await apiClient.request<AcademicOverview>("/dashboard?role=admin");
 
-      console.log("Dashboard data received:", data);
-
       if (data) {
         setOverview(data);
-        console.log("Overview data set successfully");
       } else {
         throw new Error("No data received from server");
       }
@@ -107,10 +102,8 @@ const AdminDashboard: React.FC = () => {
       setRecentUsers(mockUsers);
     } catch (error) {
       if (error instanceof Error) {
-        console.error(error.message);
         setError(`Failed to load dashboard data: ${error.message}`);
       } else {
-        console.error('Unexpected error', error);
         setError('Failed to load dashboard data: Unexpected error');
       }
     } finally {

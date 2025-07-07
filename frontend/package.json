@@ -9,7 +9,7 @@
     "build:render": "npm run build",
     "serve": "vite preview",
     "start": "python spa_server.py",
-    "postinstall": "chmod +x node_modules/.bin/vite || true"
+    "postinstall": ""
   },
   "keywords": [
     "education",
@@ -30,6 +30,7 @@
     "recharts": "^2.15.3"
   },
   "devDependencies": {
+    "@types/node": "^24.0.10",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",

@@ -354,23 +354,45 @@ app.include_router(academic.router, prefix="/api/academic")
 @app.post("/api/ask")
 async def ask_question(request: AskRequest, _current_user: Optional[User] = Depends(get_current_user_optional)):
     try:
-        # In demo mode, return demo AI responses (when JWT_SECRET_KEY is not set or is demo/dev key)
-        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
-        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower() or not _current_user:
-            return get_demo_ai_response(request.question)
+        # Check if AI API keys are available
+        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+        openai_api_key = os.getenv("OPENAI_API_KEY", "")
 
-        response = await gemini_service.get_response(request.question)
-        return response
+        # Use real AI service if API keys are available
+        if gemini_api_key or openai_api_key:
+            response = await gemini_service.get_response(request.question)
+            return response
+        else:
+            # Fallback to demo response if no API keys
+            return get_demo_ai_response(request.question)
     except Exception as e:
         # Fallback to demo response if AI service fails
+        print(f"AI service error: {str(e)}")
         return get_demo_ai_response(request.question)
 
 @app.post("/api/voice")
 async def transcribe_voice(audio: UploadFile = File(...), _current_user: Optional[User] = Depends(get_current_user_optional)):
     try:
-        # In demo mode, return demo transcription (when JWT_SECRET_KEY is not set or is demo/dev key)
-        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
-        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower() or not _current_user:
+        # Check if AI API keys are available for voice transcription
+        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+        openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
+        # Use real transcription service if API keys are available
+        if gemini_api_key or openai_api_key:
+            # Read audio file
+            audio_content = await audio.read()
+
+            # Try Gemini speech service first, fallback to Whisper if needed
+            try:
+                text = await gemini_speech_service.transcribe_audio(audio_content)
+            except Exception as gemini_error:
+                print(f"Gemini speech service failed: {gemini_error}")
+                # Fallback to Whisper service
+                text = await whisper_service.transcribe_audio(audio_content)
+
+            return {"text": text}
+        else:
+            # Fallback to demo transcription if no API keys
             import random
             demo_transcriptions = [
                 "Hello, I have a question about programming in Python.",
@@ -381,21 +403,9 @@ async def transcribe_voice(audio: UploadFile = File(...), _current_user: Optiona
                 "What are the best study strategies for mathematics?"
             ]
             return {"text": random.choice(demo_transcriptions)}
-
-        # Read audio file
-        audio_content = await audio.read()
-
-        # Try Gemini speech service first, fallback to Whisper if needed
-        try:
-            text = await gemini_speech_service.transcribe_audio(audio_content)
-        except Exception as gemini_error:
-            print(f"Gemini speech service failed: {gemini_error}")
-            # Fallback to Whisper service
-            text = await whisper_service.transcribe_audio(audio_content)
-
-        return {"text": text}
     except Exception as e:
         # Fallback to demo transcription if all services fail
+        print(f"Voice transcription error: {str(e)}")
         import random
         demo_transcriptions = [
             "I need help with my programming assignment.",
@@ -412,9 +422,12 @@ async def upload_pdf(
     db: Session = Depends(get_db)
 ):
     try:
-        # In demo mode, return demo response (when JWT_SECRET_KEY is not set or is demo/dev key)
-        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
-        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower() or not current_user:
+        # Check if AI API keys are available for PDF processing
+        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+        openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
+        # Use demo mode only if no API keys are available
+        if not gemini_api_key and not openai_api_key:
             import random
             session_id = random.randint(1000, 9999)
             return {
@@ -463,9 +476,12 @@ async def chat_about_pdf(
         if not chat_session_id or not message:
             raise HTTPException(status_code=400, detail="chat_session_id and message are required")
 
-        # In demo mode, return demo response (when JWT_SECRET_KEY is not set or is demo/dev key)
-        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
-        if not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower() or not current_user:
+        # Check if AI API keys are available for PDF chat
+        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+        openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
+        # Use demo mode only if no API keys are available
+        if not gemini_api_key and not openai_api_key:
             return get_demo_pdf_response(message)
 
         result = await pdf_service.chat_about_pdf(
@@ -1330,12 +1346,8 @@ async def get_all_users(
     db: Session = Depends(get_db)
 ):
     try:
-        # Always return demo data for now to ensure it works
-        # In demo mode, return demo data (when JWT_SECRET_KEY is not set or is demo/dev key, or no current user)
-        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
-        demo_mode = not jwt_secret or "demo" in jwt_secret.lower() or "dev" in jwt_secret.lower() or not current_user
-
-        if demo_mode:
+        # Use demo mode only if no current user (not authenticated)
+        if not current_user:
             # Return demo users
             all_users = [
                 {

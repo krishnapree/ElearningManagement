@@ -6,18 +6,18 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     rootDir: backend
-    pythonVersion: 3.11.9  # Downgraded from 3.12 to 3.11.9
+    # Note: pythonVersion is optional if runtime.txt is correct
     envVars:
       - key: DATABASE_URL
         value: sqlite:///./lms.db
       - key: ENVIRONMENT
         value: production
       - key: CORS_ORIGINS
-        sync: false  # Set this manually in Render dashboard with frontend URL
+        sync: false
       - key: GEMINI_API_KEY
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: OPENAI_API_KEY
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
     healthCheckPath: /api/health
@@ -31,7 +31,7 @@ services:
     rootDir: frontend
     envVars:
       - key: VITE_API_URL
-        sync: false  # Set this manually with backend URL
+        sync: false
       - key: VITE_NODE_ENV
         value: production
     headers:

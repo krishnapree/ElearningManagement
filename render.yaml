@@ -2,11 +2,9 @@ services:
   # Backend API Service
   - type: web
     name: eduflow-backend
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    env: docker
     rootDir: backend
-    # Note: pythonVersion is optional if runtime.txt is correct
+    dockerfilePath: Dockerfile
     envVars:
       - key: DATABASE_URL
         value: sqlite:///./lms.db

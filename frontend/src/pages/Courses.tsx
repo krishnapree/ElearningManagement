@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
+import { apiClient } from '../api/client'
 
 interface Course {
   id: number
@@ -49,17 +50,9 @@ const Courses: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      
-      const response = await fetch('/api/academic/courses', {
-        credentials: 'include'
-      })
 
-      if (response.ok) {
-        const data = await response.json()
-        setCourses(data.courses || [])
-      } else {
-        setError('Failed to fetch courses')
-      }
+      const data = await apiClient.request<{ courses: Course[] }>('/academic/courses')
+      setCourses(data.courses || [])
     } catch (err) {
       console.error('Error fetching courses:', err)
       setError('Failed to fetch courses')
@@ -70,17 +63,11 @@ const Courses: React.FC = () => {
 
   const fetchPrograms = async () => {
     try {
-      const response = await fetch('/api/academic/programs', {
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setPrograms(data.programs || [])
-        // Auto-select first program if available
-        if (data.programs && data.programs.length > 0) {
-          setSelectedProgram(data.programs[0].id)
-        }
+      const data = await apiClient.request<{ programs: Program[] }>('/academic/programs')
+      setPrograms(data.programs || [])
+      // Auto-select first program if available
+      if (data.programs && data.programs.length > 0) {
+        setSelectedProgram(data.programs[0].id)
       }
     } catch (err) {
       console.error('Error fetching programs:', err)
@@ -96,26 +83,17 @@ const Courses: React.FC = () => {
     try {
       setEnrolling(courseId)
       
-      const response = await fetch('/api/student/enroll', {
+      await apiClient.request('/student/enroll', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
         body: JSON.stringify({
           course_id: courseId,
           program_id: selectedProgram
         })
       })
 
-      if (response.ok) {
-        // Refresh courses to update enrollment counts
-        await fetchCourses()
-        alert('Successfully enrolled in course!')
-      } else {
-        const errorData = await response.json()
-        alert(errorData.detail || 'Failed to enroll in course')
-      }
+      // Refresh courses to update enrollment counts
+      await fetchCourses()
+      alert('Successfully enrolled in course!')
     } catch (error) {
       console.error('Error enrolling in course:', error)
       alert('Failed to enroll in course')

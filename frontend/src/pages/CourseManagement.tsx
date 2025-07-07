@@ -102,11 +102,8 @@ const CourseManagement: React.FC = () => {
 
   const fetchLecturers = async () => {
     try {
-      const response = await fetch("/api/users?role=lecturer", { credentials: "include" });
-      if (response.ok) {
-        const data = await response.json();
-        setLecturers(data.users || []);
-      }
+      const data = await apiClient.request<{ users: Lecturer[] }>("/users?role=lecturer");
+      setLecturers(data.users || []);
     } catch (error) {
       console.error("Failed to fetch lecturers:", error);
     }
@@ -118,34 +115,25 @@ const CourseManagement: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch("/api/courses", {
+      await apiClient.request("/courses", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify(newCourse),
       });
 
-      if (response.ok) {
-        setShowCreateModal(false);
-        setNewCourse({
-          name: "",
-          code: "",
-          description: "",
-          credits: 3,
-          department_id: 0,
-          semester_id: 0,
-          lecturer_id: 0,
-          max_capacity: 30,
-          prerequisites: "",
-          syllabus: "",
-        });
-        fetchData();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || "Failed to create course");
-      }
+      setShowCreateModal(false);
+      setNewCourse({
+        name: "",
+        code: "",
+        description: "",
+        credits: 3,
+        department_id: 0,
+        semester_id: 0,
+        lecturer_id: 0,
+        max_capacity: 30,
+        prerequisites: "",
+        syllabus: "",
+      });
+      fetchData();
     } catch (error) {
       setError("Failed to create course");
     } finally {
@@ -157,14 +145,10 @@ const CourseManagement: React.FC = () => {
     if (!confirm("Are you sure you want to delete this course?")) return;
 
     try {
-      const response = await fetch(`/api/courses/${courseId}?force=${force}`, {
+      await apiClient.request(`/courses/${courseId}?force=${force}`, {
         method: "DELETE",
-        credentials: "include",
       });
-
-      if (response.ok) {
-        fetchData();
-      }
+      fetchData();
     } catch (error) {
       console.error("Failed to delete course:", error);
     }
@@ -680,19 +664,12 @@ const CourseManagement: React.FC = () => {
                 setSubmitting(true);
                 setError(null);
                 try {
-                  const response = await fetch(`/api/courses/${editingCourse.id}`, {
+                  await apiClient.request(`/courses/${editingCourse.id}`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
                     body: JSON.stringify(editingCourse),
                   });
-                  if (response.ok) {
-                    setEditingCourse(null);
-                    fetchData();
-                  } else {
-                    const errorData = await response.json();
-                    setError(errorData.detail || "Failed to update course");
-                  }
+                  setEditingCourse(null);
+                  fetchData();
                 } catch (error) {
                   setError("Failed to update course");
                 } finally {

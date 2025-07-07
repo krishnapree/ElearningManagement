@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { apiClient } from "../api/client";
 
 interface Course {
   id: number;
@@ -26,16 +27,9 @@ const LecturerCourses: React.FC = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/lecturer/courses", {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data.courses || []);
-      } else {
-        setError("Failed to fetch courses");
-      }
+      setError(null);
+      const data = await apiClient.request<{ courses: Course[] }>("/lecturer/courses");
+      setCourses(data.courses || []);
     } catch (error) {
       console.error("Error fetching courses:", error);
       setError("Failed to fetch courses");

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiClient } from "../api/client";
 
 interface Announcement {
   id: number;
@@ -87,23 +88,11 @@ const CampusCoordination: React.FC = () => {
       setError(null);
 
       if (activeTab === "announcements") {
-        const response = await fetch("/api/announcements");
-
-        if (response.ok) {
-          const data = await response.json();
-          setAnnouncements(data.announcements || []);
-        } else {
-          setError("Failed to fetch announcements");
-        }
+        const data = await apiClient.request<{ announcements: Announcement[] }>("/announcements");
+        setAnnouncements(data.announcements || []);
       } else {
-        const response = await fetch("/api/events");
-
-        if (response.ok) {
-          const data = await response.json();
-          setEvents(data.events || []);
-        } else {
-          setError("Failed to fetch events");
-        }
+        const data = await apiClient.request<{ events: Event[] }>("/events");
+        setEvents(data.events || []);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -119,11 +108,8 @@ const CampusCoordination: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch("/api/announcements", {
+      await apiClient.request("/announcements", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           title: newAnnouncement.title,
           content: newAnnouncement.content,
@@ -132,8 +118,7 @@ const CampusCoordination: React.FC = () => {
         }),
       });
 
-      if (response.ok) {
-        setShowCreateModal(false);
+      setShowCreateModal(false);
         setNewAnnouncement({
           title: "",
           content: "",
@@ -152,11 +137,6 @@ const CampusCoordination: React.FC = () => {
         }, 3000);
 
         fetchData();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || "Failed to create announcement");
-        setSuccessMessage(null);
-      }
     } catch (error) {
       console.error("Failed to create announcement:", error);
       setError("Failed to create announcement");
@@ -172,11 +152,8 @@ const CampusCoordination: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch("/api/events", {
+      await apiClient.request("/events", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           title: newEvent.title,
           description: newEvent.description,
@@ -186,31 +163,25 @@ const CampusCoordination: React.FC = () => {
         }),
       });
 
-      if (response.ok) {
-        setShowCreateModal(false);
-        setNewEvent({
-          title: "",
-          description: "",
-          event_date: "",
-          event_time: "",
-          location: "",
-          max_attendees: "",
-          is_public: true,
-        });
-        setSuccessMessage("Event created successfully!");
-        setError(null);
+      setShowCreateModal(false);
+      setNewEvent({
+        title: "",
+        description: "",
+        event_date: "",
+        event_time: "",
+        location: "",
+        max_attendees: "",
+        is_public: true,
+      });
+      setSuccessMessage("Event created successfully!");
+      setError(null);
 
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-
-        fetchData();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || "Failed to create event");
+      // Clear success message after 3 seconds
+      setTimeout(() => {
         setSuccessMessage(null);
-      }
+      }, 3000);
+
+      fetchData();
     } catch (error) {
       console.error("Failed to create event:", error);
       setError("Failed to create event");

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import VoiceRecorder from "../components/VoiceRecorder";
+import { apiClient } from "../api/client";
 
 interface AIResponse {
   text: string;
@@ -28,20 +29,11 @@ const Ask: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/ask", {
+      const data = await apiClient.request<AIResponse>("/ask", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify({ question }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to get response");
-      }
-
-      const data = await res.json();
       setResponse(data);
     } catch (error) {
       console.error("Error:", error);
@@ -62,17 +54,11 @@ const Ask: React.FC = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/upload-pdf", {
+      const data = await apiClient.request<{ session_id: number }>("/upload-pdf", {
         method: "POST",
-        credentials: "include",
         body: formData,
+        headers: {} // Let browser set Content-Type for FormData
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to upload PDF");
-      }
-
-      const data = await res.json();
       setPdfFile(file);
       setChatSessionId(data.chat_session_id);
       setChatHistory([
@@ -97,23 +83,13 @@ const Ask: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/chat-pdf", {
+      const data = await apiClient.request<AIResponse>("/chat-pdf", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify({
           chat_session_id: chatSessionId,
           message: question,
         }),
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to get response");
-      }
-
-      const data = await res.json();
 
       // Add user message and AI response to chat history
       setChatHistory((prev) => [

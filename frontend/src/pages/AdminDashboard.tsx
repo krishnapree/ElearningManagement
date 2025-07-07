@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../api/client";
-import ApiHealthCheck from "../components/ApiHealthCheck";
 
 interface AcademicOverview {
   total_students: number;
@@ -151,9 +150,6 @@ const AdminDashboard: React.FC = () => {
             Welcome back, {_user?.name}. Here's your system overview.
           </p>
         </div>
-
-        {/* API Health Check */}
-        <ApiHealthCheck />
 
         {/* Tabs */}
         <div className="mb-6">

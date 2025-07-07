@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '../api/client';
 import { 
   BarChart, 
   Bar, 
@@ -71,15 +72,10 @@ const CourseAnalytics: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch('/api/lecturer/courses', {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data.courses);
-        if (data.courses.length > 0) {
-          setSelectedCourse(data.courses[0].id);
-        }
+      const data = await apiClient.request<{ courses: Course[] }>('/lecturer/courses');
+      setCourses(data.courses || []);
+      if (data.courses && data.courses.length > 0) {
+        setSelectedCourse(data.courses[0].id);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -93,13 +89,8 @@ const CourseAnalytics: React.FC = () => {
     
     try {
       setLoading(true);
-      const response = await fetch(`/api/courses/${selectedCourse}/analytics?timeRange=${timeRange}`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setAnalyticsData(data);
-      }
+      const data = await apiClient.request<AnalyticsData>(`/courses/${selectedCourse}/analytics?timeRange=${timeRange}`);
+      setAnalyticsData(data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       // Mock data for demonstration

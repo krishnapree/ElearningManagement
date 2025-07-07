@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiClient } from "../api/client";
 
 interface Course {
   id: number;
@@ -94,14 +95,8 @@ const LecturerCourseManagement: React.FC = () => {
   const fetchLecturerCourses = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/lecturer/courses", {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data.courses || []);
-      }
+      const data = await apiClient.request<{ courses: Course[] }>("/lecturer/courses");
+      setCourses(data.courses || []);
     } catch (error) {
       console.error("Failed to fetch lecturer courses:", error);
     } finally {
@@ -111,14 +106,8 @@ const LecturerCourseManagement: React.FC = () => {
 
   const fetchCourseMaterials = async (courseId: number) => {
     try {
-      const response = await fetch(`/api/courses/${courseId}/materials`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMaterials(data.materials || []);
-      }
+      const data = await apiClient.request<{ materials: CourseMaterial[] }>(`/courses/${courseId}/materials`);
+      setMaterials(data.materials || []);
     } catch (error) {
       console.error("Failed to fetch course materials:", error);
     }
@@ -126,14 +115,8 @@ const LecturerCourseManagement: React.FC = () => {
 
   const fetchCourseAssignments = async (courseId: number) => {
     try {
-      const response = await fetch(`/api/assignments?course_id=${courseId}`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAssignments(data.assignments || []);
-      }
+      const data = await apiClient.request<{ assignments: Assignment[] }>(`/assignments?course_id=${courseId}`);
+      setAssignments(data.assignments || []);
     } catch (error) {
       console.error("Failed to fetch course assignments:", error);
     }
@@ -198,26 +181,21 @@ const LecturerCourseManagement: React.FC = () => {
         }
       }
 
-      const response = await fetch(`/api/courses/${selectedCourse.id}/materials`, {
+      await apiClient.request(`/courses/${selectedCourse.id}/materials`, {
         method: 'POST',
-        credentials: 'include',
-        body: formData
+        body: formData,
+        headers: {} // Let browser set Content-Type for FormData
       });
 
-      if (response.ok) {
-        setShowMaterialModal(false);
-        setMaterialForm({ title: "", description: "", material_type: "document" });
-        setSelectedFile(null);
-        setVideoUploadData({ title: "", description: "", duration: "", thumbnail: null });
-        setUploadProgress(0);
-        
-        // Refresh materials
-        await fetchCourseMaterials(selectedCourse.id);
-        alert('Material uploaded successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || 'Failed to upload material');
-      }
+      setShowMaterialModal(false);
+      setMaterialForm({ title: "", description: "", material_type: "document" });
+      setSelectedFile(null);
+      setVideoUploadData({ title: "", description: "", duration: "", thumbnail: null });
+      setUploadProgress(0);
+
+      // Refresh materials
+      await fetchCourseMaterials(selectedCourse.id);
+      alert('Material uploaded successfully!');
     } catch (error) {
       console.error('Error uploading material:', error);
       alert('Failed to upload material');
@@ -233,34 +211,25 @@ const LecturerCourseManagement: React.FC = () => {
 
     setCreatingAssignment(true);
     try {
-      const response = await fetch("/api/assignments", {
+      await apiClient.request("/assignments", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify({
           ...assignmentForm,
           course_id: selectedCourse.id
         }),
       });
 
-      if (response.ok) {
-        setShowAssignmentModal(false);
-        setAssignmentForm({
-          title: "",
-          description: "",
-          instructions: "",
-          max_points: 100,
-          assignment_type: "homework",
-          due_date: "",
-          is_published: true
-        });
-        fetchCourseAssignments(selectedCourse.id);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || "Failed to create assignment");
-      }
+      setShowAssignmentModal(false);
+      setAssignmentForm({
+        title: "",
+        description: "",
+        instructions: "",
+        max_points: 100,
+        assignment_type: "homework",
+        due_date: "",
+        is_published: true
+      });
+      fetchCourseAssignments(selectedCourse.id);
     } catch (error) {
       console.error("Failed to create assignment:", error);
       alert("Failed to create assignment");

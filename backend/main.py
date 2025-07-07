@@ -1414,7 +1414,7 @@ async def get_all_users(
             return {"users": all_users}
 
         # Only allow admins to view user lists
-        if current_user.role != UserRole.ADMIN:
+        if not current_user or current_user.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Access denied")
 
         if role and unassigned:
@@ -1868,7 +1868,7 @@ async def enroll_in_course(
                 }
             }
 
-        if current_user.role != UserRole.STUDENT:
+        if not current_user or current_user.role != UserRole.STUDENT:
             raise HTTPException(status_code=403, detail="Access denied")
 
         course_id = request.get("course_id")
@@ -2599,7 +2599,9 @@ async def upload_course_material(
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
 
-        if current_user.role == UserRole.LECTURER and course.lecturer_id != current_user.id:
+        if not current_user:
+            raise HTTPException(status_code=403, detail="Access denied")
+        elif current_user.role == UserRole.LECTURER and course.lecturer_id != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
         elif current_user.role not in [UserRole.ADMIN, UserRole.LECTURER]:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -2766,7 +2768,9 @@ async def get_course_materials(
 
         # Check enrollment or teaching access
         has_access = False
-        if current_user.role == UserRole.ADMIN:
+        if not current_user:
+            has_access = False
+        elif current_user.role == UserRole.ADMIN:
             has_access = True
         elif current_user.role == UserRole.LECTURER and course.lecturer_id == current_user.id:
             has_access = True
@@ -2982,7 +2986,9 @@ async def get_course_analytics(
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
 
-        if current_user.role == UserRole.LECTURER and course.lecturer_id != current_user.id:
+        if not current_user:
+            raise HTTPException(status_code=403, detail="Access denied")
+        elif current_user.role == UserRole.LECTURER and course.lecturer_id != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
         elif current_user.role not in [UserRole.ADMIN, UserRole.LECTURER]:
             raise HTTPException(status_code=403, detail="Access denied")

@@ -79,8 +79,8 @@ const AssignmentManagement: React.FC = () => {
       const selectedUser = localStorage.getItem('selectedUser');
       const userRole = selectedUser ? JSON.parse(selectedUser).role : 'admin';
 
-      const data = await apiClient.request<Assignment[]>(`/assignments?role=${userRole}`);
-      setAssignments(Array.isArray(data) ? data : data.assignments || []);
+      const data = await apiClient.request<Assignment[] | { assignments: Assignment[] }>(`/assignments?role=${userRole}`);
+      setAssignments(Array.isArray(data) ? data : (data as { assignments: Assignment[] }).assignments || []);
     } catch (error) {
       console.error("Error fetching assignments:", error);
     } finally {
@@ -90,11 +90,8 @@ const AssignmentManagement: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/courses");
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data);
-      }
+      const data = await apiClient.request<Course[]>("/courses");
+      setCourses(data || []);
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
@@ -102,13 +99,8 @@ const AssignmentManagement: React.FC = () => {
 
   const fetchSubmissions = async (assignmentId: number) => {
     try {
-      const response = await fetch(
-        `/api/assignments/${assignmentId}/submissions`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setSubmissions(data);
-      }
+      const data = await apiClient.request<Submission[]>(`/assignments/${assignmentId}/submissions`);
+      setSubmissions(data || []);
     } catch (error) {
       console.error("Error fetching submissions:", error);
     }
@@ -117,27 +109,22 @@ const AssignmentManagement: React.FC = () => {
   const handleCreateAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/assignments", {
+      await apiClient.request("/assignments", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(newAssignment),
       });
 
-      if (response.ok) {
-        setShowCreateModal(false);
-        setNewAssignment({
-          title: "",
-          description: "",
-          course_id: "",
-          due_date: "",
-          max_points: 100,
-          assignment_type: "homework",
-          instructions: "",
-        });
-        fetchAssignments();
-      }
+      setShowCreateModal(false);
+      setNewAssignment({
+        title: "",
+        description: "",
+        course_id: "",
+        due_date: "",
+        max_points: 100,
+        assignment_type: "homework",
+        instructions: "",
+      });
+      fetchAssignments();
     } catch (error) {
       console.error("Error creating assignment:", error);
     }
@@ -145,25 +132,20 @@ const AssignmentManagement: React.FC = () => {
 
   const handleGradeSubmission = async (submissionId: number) => {
     try {
-      const response = await fetch(`/api/submissions/${submissionId}/grade`, {
+      await apiClient.request(`/submissions/${submissionId}/grade`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           grade: parseFloat(gradeForm.grade),
           feedback: gradeForm.feedback,
         }),
       });
 
-      if (response.ok) {
-        setGradingSubmission(null);
-        setGradeForm({ grade: "", feedback: "" });
-        if (selectedAssignment) {
-          fetchSubmissions(selectedAssignment.id);
-        }
-        fetchAssignments();
+      setGradingSubmission(null);
+      setGradeForm({ grade: "", feedback: "" });
+      if (selectedAssignment) {
+        fetchSubmissions(selectedAssignment.id);
       }
+      fetchAssignments();
     } catch (error) {
       console.error("Error grading submission:", error);
     }

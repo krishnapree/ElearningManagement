@@ -120,8 +120,13 @@ const AdminDashboard: React.FC = () => {
       ];
       setRecentUsers(mockUsers);
     } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
-      setError(`Failed to load dashboard data: ${error.message || error}`);
+      if (error instanceof Error) {
+        console.error(error.message);
+        setError(`Failed to load dashboard data: ${error.message}`);
+      } else {
+        console.error('Unexpected error', error);
+        setError('Failed to load dashboard data: Unexpected error');
+      }
     } finally {
       setLoading(false);
     }

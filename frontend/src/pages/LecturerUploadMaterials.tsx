@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
+import { apiClient } from '../api/client';
 
 interface Course {
   id: number;
@@ -42,14 +43,8 @@ const LecturerUploadMaterials: React.FC = () => {
 
   const fetchCourseDetails = async () => {
     try {
-      const response = await fetch(`/api/courses/${_courseId}`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCourse(data);
-      }
+      const data = await apiClient.request<Course>(`/courses/${_courseId}`, { credentials: "include" });
+      setCourse(data);
     } catch (error) {
       console.error("Error fetching course details:", error);
     } finally {
@@ -59,14 +54,8 @@ const LecturerUploadMaterials: React.FC = () => {
 
   const fetchCourseMaterials = async () => {
     try {
-      const response = await fetch(`/api/courses/${_courseId}/materials`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMaterials(data.materials || []);
-      }
+      const data = await apiClient.request<{ materials: UploadedMaterial[] }>(`/courses/${_courseId}/materials`, { credentials: "include" });
+      setMaterials(data.materials || []);
     } catch (error) {
       console.error("Error fetching course materials:", error);
     }
@@ -109,28 +98,23 @@ const LecturerUploadMaterials: React.FC = () => {
     formData.append("material_type", materialType);
 
     try {
-      const response = await fetch(`/api/courses/${_courseId}/materials`, {
+      await apiClient.request(`/courses/${_courseId}/materials`, {
         method: "POST",
         credentials: "include",
         body: formData,
       });
 
-      if (response.ok) {
-        alert("Material uploaded successfully!");
-        
-        // Reset form
-        setTitle("");
-        setDescription("");
-        setSelectedFile(null);
-        setMaterialType("document");
-        setUploadProgress(0);
-        
-        // Refresh materials list
-        fetchCourseMaterials();
-      } else {
-        const error = await response.json();
-        alert(`Upload failed: ${error.detail || 'Unknown error'}`);
-      }
+      alert("Material uploaded successfully!");
+      
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setSelectedFile(null);
+      setMaterialType("document");
+      setUploadProgress(0);
+      
+      // Refresh materials list
+      fetchCourseMaterials();
     } catch (error) {
       console.error("Upload error:", error);
       alert("Upload failed. Please try again.");
@@ -145,17 +129,13 @@ const LecturerUploadMaterials: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/materials/${materialId}`, {
+      await apiClient.request(`/materials/${materialId}`, {
         method: "DELETE",
         credentials: "include",
       });
 
-      if (response.ok) {
-        alert("Material deleted successfully!");
-        fetchCourseMaterials();
-      } else {
-        alert("Failed to delete material");
-      }
+      alert("Material deleted successfully!");
+      fetchCourseMaterials();
     } catch (error) {
       console.error("Delete error:", error);
       alert("Failed to delete material");

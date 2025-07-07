@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { apiClient } from '../api/client'
 
 interface Enrollment {
   id: number
@@ -30,25 +31,11 @@ const StudentEnrollments: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      
       console.log('Fetching enrollments for user:', _user?.id)
-      
-      const response = await fetch('/api/student/enrollments', {
-        credentials: 'include'
-      })
-      
-      console.log('Response status:', response.status)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Enrollments data:', data)
-        setEnrollments(data.enrollments || [])
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Error response:', errorData)
-        setError(`Failed to fetch enrollments: ${errorData.detail || response.statusText}`)
-      }
-    } catch (error) {
+      const data = await apiClient.request<{ enrollments: Enrollment[] }>('/student/enrollments', { credentials: 'include' })
+      console.log('Enrollments data:', data)
+      setEnrollments(data.enrollments || [])
+    } catch (error: unknown) {
       console.error('Error fetching enrollments:', error)
       setError('Failed to fetch enrollments: Network error')
     } finally {

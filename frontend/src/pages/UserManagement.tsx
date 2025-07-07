@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiClient } from '../api/client';
 
 interface User {
   id: number;
@@ -43,16 +44,9 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users", {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users || []);
-      } else {
-        setError("Failed to fetch users");
-      }
+      const data = await apiClient.request<{ users: User[] }>("/users", { credentials: "include" });
+      setUsers(data.users || []);
+      setError(null);
     } catch (error) {
       console.error("Error fetching users:", error);
       setError("Failed to fetch users");
@@ -101,43 +95,26 @@ const UserManagement: React.FC = () => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-
     try {
-      const url = editingUser ? `/api/users/${editingUser.id}` : "/api/users";
-
+      const url = editingUser ? `/users/${editingUser.id}` : "/users";
       const method = editingUser ? "PUT" : "POST";
-
-      const response = await fetch(url, {
+      await apiClient.request(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(formData),
       });
-
-      if (response.ok) {
-        await fetchUsers();
-        closeModal();
-        setSuccessMessage(
-          editingUser
-            ? "User updated successfully!"
-            : "User created successfully!"
-        );
-        setError(null);
-
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || "Failed to save user");
-        setSuccessMessage(null);
-      }
-    } catch (error) {
-      console.error("Error saving user:", error);
-      setError("Failed to save user");
+      await fetchUsers();
+      closeModal();
+      setSuccessMessage(
+        editingUser ? "User updated successfully!" : "User created successfully!"
+      );
+      setError(null);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setError(errorMessage || "Failed to save user");
+      setSuccessMessage(null);
     } finally {
       setSubmitting(false);
     }
@@ -147,30 +124,18 @@ const UserManagement: React.FC = () => {
     if (!confirm("Are you sure you want to delete this user?")) {
       return;
     }
-
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      await apiClient.request(`/users/${userId}`, {
         method: "DELETE",
         credentials: "include",
       });
-
-      if (response.ok) {
-        await fetchUsers();
-        setSuccessMessage("User deleted successfully!");
-        setError(null);
-
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || "Failed to delete user");
-        setSuccessMessage(null);
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      setError("Failed to delete user");
+      await fetchUsers();
+      setSuccessMessage("User deleted successfully!");
+      setError(null);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setError(errorMessage || "Failed to delete user");
       setSuccessMessage(null);
     }
   };

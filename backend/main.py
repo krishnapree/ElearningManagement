@@ -190,6 +190,31 @@ async def health_check():
         "service": "EduFlow API"
     }
 
+# Test endpoint for debugging
+@app.get("/api/test")
+async def test_endpoint():
+    """Test endpoint to verify API is working"""
+    try:
+        # Test database connection
+        db = next(get_db())
+        user_count = db.query(User).count()
+        db.close()
+
+        return {
+            "status": "success",
+            "message": "API is working correctly",
+            "database_users": user_count,
+            "environment": os.getenv("ENVIRONMENT", "development"),
+            "cors_origins": os.getenv("CORS_ORIGINS", "not_set"),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"API test failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
 # Root endpoint
 @app.get("/")
 async def root():

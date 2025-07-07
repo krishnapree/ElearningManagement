@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import ProgressChart from '../components/ProgressChart'
+import { apiClient } from '../api/client'
 
 interface DashboardData {
   overall_score: number
@@ -37,20 +38,7 @@ const Dashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const response = await fetch(`/api/dashboard?range=${timeRange}`, {
-        credentials: 'include'
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to load dashboard data')
-      }
-
-      let data = null;
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.error("Invalid JSON response", e);
-      }
+      const data = await apiClient.request<DashboardData>(`/dashboard?range=${timeRange}`);
       setData(data)
     } catch (error) {
       console.error('Error loading dashboard:', error)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import CoursePlayer from '../components/CoursePlayer'
+import { apiClient } from '../api/client'
 
 interface Course {
   id: number
@@ -58,19 +59,11 @@ const StudentCourseMaterials: React.FC = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/student/enrolled-courses', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Courses data received:', data)
-        setCourses(data.courses || [])
-        if (data.courses.length > 0 && !selectedCourse) {
-          setSelectedCourse(data.courses[0].id)
-        }
-      } else {
-        console.error('Failed to fetch courses:', response.status, response.statusText)
+      const data = await apiClient.request<{ courses: Course[] }>('/student/enrolled-courses', { credentials: 'include' })
+      console.log('Courses data received:', data)
+      setCourses(data.courses || [])
+      if (data.courses.length > 0 && !selectedCourse) {
+        setSelectedCourse(data.courses[0].id)
       }
     } catch (error) {
       console.error('Error fetching courses:', error)
@@ -81,24 +74,11 @@ const StudentCourseMaterials: React.FC = () => {
 
   const fetchMaterials = async () => {
     if (!selectedCourse) return
-
     try {
       console.log('Fetching materials for course:', selectedCourse)
-      const response = await fetch(`/api/courses/${selectedCourse}/materials`, {
-        credentials: 'include'
-      })
-      
-      console.log('Materials response status:', response.status)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Materials data received:', data)
-        setMaterials(data.materials || [])
-      } else {
-        console.error('Failed to fetch materials:', response.status, response.statusText)
-        const errorText = await response.text()
-        console.error('Error response:', errorText)
-      }
+      const data = await apiClient.request<{ materials: Material[] }>(`/courses/${selectedCourse}/materials`, { credentials: 'include' })
+      console.log('Materials data received:', data)
+      setMaterials(data.materials || [])
     } catch (error) {
       console.error('Error fetching materials:', error)
     }
@@ -106,16 +86,9 @@ const StudentCourseMaterials: React.FC = () => {
 
   const fetchLessons = async () => {
     if (!selectedCourse) return
-
     try {
-      const response = await fetch(`/api/courses/${selectedCourse}/lessons`, {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setLessons(data.lessons || [])
-      }
+      const data = await apiClient.request<{ lessons: Lesson[] }>(`/courses/${selectedCourse}/lessons`, { credentials: 'include' })
+      setLessons(data.lessons || [])
     } catch (error) {
       console.error('Error fetching lessons:', error)
     }

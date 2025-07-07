@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import CoursePlayer from "../components/CoursePlayer";
+import { apiClient } from '../api/client';
 
 interface CourseMaterial {
   id: number;
@@ -43,21 +44,9 @@ const StudentCoursePlaylist: React.FC = () => {
     try {
       setLoading(true);
       console.log('Fetching course materials for courseId:', _courseId);
-      const response = await fetch(`/api/courses/${_courseId}/materials`, {
-        credentials: "include",
-      });
-
-      console.log('Course materials response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Course materials data received:', data);
-        setCourse(data);
-      } else {
-        console.error("Failed to fetch course materials:", response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-      }
+      const data = await apiClient.request<Course>(`/courses/${_courseId}/materials`, { credentials: "include" });
+      console.log('Course materials data received:', data);
+      setCourse(data);
     } catch (error) {
       console.error("Error fetching course materials:", error);
     } finally {

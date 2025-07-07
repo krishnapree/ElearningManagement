@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { apiClient } from '../api/client'
 
 interface Grade {
   id: number
@@ -53,35 +54,28 @@ const StudentGrades: React.FC = () => {
       setLoading(true)
       
       // Fetch semesters
-      const semestersResponse = await fetch('/api/student/semesters', {
-        credentials: 'include'
-      })
-      if (semestersResponse.ok) {
-        const semestersData = await semestersResponse.json()
-        setSemesters(semestersData.semesters || [])
-        if (!selectedSemester && semestersData.semesters.length > 0) {
-          const currentSemester = semestersData.semesters.find((s: Semester) => s.is_current)
-          setSelectedSemester(currentSemester?.id || semestersData.semesters[0].id)
-        }
+      const semestersData = await apiClient.request<{ semesters: Semester[] }>(
+        '/student/semesters', { credentials: 'include' }
+      )
+      setSemesters(semestersData.semesters || [])
+      if (!selectedSemester && semestersData.semesters.length > 0) {
+        const currentSemester = semestersData.semesters.find((s: Semester) => s.is_current)
+        setSelectedSemester(currentSemester?.id || semestersData.semesters[0].id)
       }
 
       // Fetch grades for selected semester
-      const gradesResponse = await fetch(`/api/student/grades${selectedSemester ? `?semester_id=${selectedSemester}` : ''}`, {
-        credentials: 'include'
-      })
-      if (gradesResponse.ok) {
-        const gradesData = await gradesResponse.json()
-        setGrades(gradesData.grades || [])
-      }
+      const gradesData = await apiClient.request<{ grades: Grade[] }>(
+        `/student/grades${selectedSemester ? `?semester_id=${selectedSemester}` : ''}`,
+        { credentials: 'include' }
+      )
+      setGrades(gradesData.grades || [])
 
       // Fetch course grades
-      const courseGradesResponse = await fetch(`/api/student/course-grades${selectedSemester ? `?semester_id=${selectedSemester}` : ''}`, {
-        credentials: 'include'
-      })
-      if (courseGradesResponse.ok) {
-        const courseGradesData = await courseGradesResponse.json()
-        setCourseGrades(courseGradesData.course_grades || [])
-      }
+      const courseGradesData = await apiClient.request<{ course_grades: CourseGrade[] }>(
+        `/student/course-grades${selectedSemester ? `?semester_id=${selectedSemester}` : ''}`,
+        { credentials: 'include' }
+      )
+      setCourseGrades(courseGradesData.course_grades || [])
 
     } catch (error) {
       console.error('Error fetching grades data:', error)

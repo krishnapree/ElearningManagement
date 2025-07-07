@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { apiClient } from '../api/client';
 
 interface Student {
   id: number;
@@ -29,21 +30,13 @@ const StudentManagement: React.FC = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-
-      // Check user role to determine which endpoint to use
-      let endpoint = "/api/users/by-role/student"; // Default for admin
+      let endpoint = "/users/by-role/student";
       if (_user?.role === "lecturer") {
-        endpoint = "/api/lecturer/students"; // Lecturer-specific endpoint
+        endpoint = "/lecturer/students";
       }
-
-      const response = await fetch(endpoint);
-
-      if (response.ok) {
-        const data = await response.json();
-        setStudents(data.users || []);
-      } else {
-        setError("Failed to fetch students");
-      }
+      const data = await apiClient.request<{ users: Student[] }>(endpoint);
+      setStudents(data.users || []);
+      setError(null);
     } catch (error) {
       console.error("Error fetching students:", error);
       setError("Failed to fetch students");

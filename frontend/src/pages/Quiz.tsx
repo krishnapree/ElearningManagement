@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import QuizCard from "../components/QuizCard";
 import { Question } from "../types";
+import { apiClient } from '../api/client';
 
 const Quiz: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -34,33 +35,21 @@ const Quiz: React.FC = () => {
     setLoading(true);
     try {
       // Build URL with parameters
-      let url = "/api/quiz";
+      let url = "/quiz";
       const params = new URLSearchParams();
-
       if (sessionId || chatSessionId) {
         params.append(
           "chat_session_id",
           (sessionId || chatSessionId)!.toString()
         );
       }
-
       if (difficulty || selectedDifficulty) {
         params.append("difficulty", difficulty || selectedDifficulty);
       }
-
       if (params.toString()) {
         url += "?" + params.toString();
       }
-
-      const response = await fetch(url, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to load quiz");
-      }
-
-      const data = await response.json();
+      const data = await apiClient.request<{ questions: Question[] }>(url, { credentials: "include" });
       setQuestions(data.questions);
       setQuizStarted(true);
     } catch (error) {
@@ -91,7 +80,7 @@ const Quiz: React.FC = () => {
     finalAnswers: Array<{ questionId: number; isCorrect: boolean }>
   ) => {
     try {
-      const response = await fetch("/api/submit-quiz", {
+      await apiClient.request("/submit-quiz", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,11 +88,6 @@ const Quiz: React.FC = () => {
         credentials: "include",
         body: JSON.stringify({ answers: finalAnswers }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit quiz");
-      }
-
       setQuizCompleted(true);
     } catch (error) {
       console.error("Error submitting quiz:", error);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-// import { apiClient } from "../api/client";
+import { apiClient } from "../api/client";
+import ApiHealthCheck from "../components/ApiHealthCheck";
 
 interface AcademicOverview {
   total_students: number;
@@ -43,25 +44,10 @@ const AdminDashboard: React.FC = () => {
 
       console.log("Fetching admin dashboard data...");
 
-      // Fetch academic overview
-      const response = await fetch("/api/dashboard?role=admin", {
-        credentials: "include",
-      });
+      // Use API client for proper URL handling
+      const data = await apiClient.request<AcademicOverview>("/dashboard?role=admin");
 
-      console.log("Dashboard API response status:", response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      let data = null;
-      try {
-        data = await response.json();
-        console.log("Dashboard data received:", data);
-      } catch (e) {
-        console.error("Invalid JSON response", e);
-        throw new Error("Invalid JSON response from server");
-      }
+      console.log("Dashboard data received:", data);
 
       if (data) {
         setOverview(data);
@@ -172,6 +158,9 @@ const AdminDashboard: React.FC = () => {
             Welcome back, {_user?.name}. Here's your system overview.
           </p>
         </div>
+
+        {/* API Health Check */}
+        <ApiHealthCheck />
 
         {/* Tabs */}
         <div className="mb-6">

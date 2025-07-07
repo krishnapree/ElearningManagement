@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
+import { apiClient } from '../api/client';
 
 interface StudentDashboard {
   current_semester: {
@@ -55,29 +56,13 @@ const StudentDashboard: React.FC = () => {
     try {
       setLoading(true);
       console.log('Fetching dashboard data for user:', _user?.id);
-      
-      const response = await fetch(`/api/dashboard?role=student&t=${Date.now()}`, {
+      const data = await apiClient.request<StudentDashboard>(`/dashboard?role=student&t=${Date.now()}`, {
         credentials: "include",
         cache: "no-cache",
       });
-
-      console.log('Dashboard response status:', response.status);
-
-      if (response.ok) {
-        let data = null;
-        try {
-          data = await response.json();
-        } catch (e) {
-          console.error("Invalid JSON response", e);
-        }
-        console.log('Dashboard data received:', data);
-        console.log('Setting dashboard data at:', new Date().toISOString());
-        setDashboardData(data);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Dashboard error response:', errorData);
-        throw new Error(`Failed to fetch dashboard: ${errorData.detail || response.statusText}`);
-      }
+      console.log('Dashboard data received:', data);
+      console.log('Setting dashboard data at:', new Date().toISOString());
+      setDashboardData(data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
     } finally {

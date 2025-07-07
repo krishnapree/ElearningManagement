@@ -1,14 +1,17 @@
 /// <reference types="vite/client" />
 // Use Vite's built-in import.meta.env for environment variables
 const API_BASE = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? "https://your-backend-url.onrender.com/api" : "/api");
+  (import.meta.env.PROD ? "https://eduflow-backend.onrender.com" : "http://localhost:8000");
+
+// Ensure API_BASE ends with /api for proper endpoint construction
+const API_URL = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/api`;
 
 class APIClient {
-  private async request<T>(
+  public async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    const url = `${API_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
     const config = {
       credentials: "include" as RequestCredentials,
       headers: {

@@ -14,6 +14,7 @@ import {
   Timer,
   TrendingUp,
 } from "lucide-react";
+import { apiClient } from '../api/client';
 
 interface Course {
   id: number;
@@ -93,13 +94,8 @@ const StudentAssessments: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/student/courses", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data.courses);
-      }
+      const data = await apiClient.request<{ courses: Course[] }>("/student/courses", { credentials: "include" });
+      setCourses(data.courses);
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
@@ -107,13 +103,8 @@ const StudentAssessments: React.FC = () => {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await fetch("/api/student/quizzes", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setQuizzes(data.quizzes);
-      }
+      const data = await apiClient.request<{ quizzes: Quiz[] }>("/student/quizzes", { credentials: "include" });
+      setQuizzes(data.quizzes);
     } catch (error) {
       console.error("Error fetching quizzes:", error);
     } finally {
@@ -123,13 +114,8 @@ const StudentAssessments: React.FC = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch("/api/student/assignments", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setAssignments(data.assignments);
-      }
+      const data = await apiClient.request<{ assignments: Assignment[] }>("/student/assignments", { credentials: "include" });
+      setAssignments(data.assignments);
     } catch (error) {
       console.error("Error fetching assignments:", error);
     }
@@ -137,15 +123,11 @@ const StudentAssessments: React.FC = () => {
 
   const startQuiz = async (quizId: number) => {
     try {
-      const response = await fetch(`/api/quizzes/${quizId}/start`, {
+      const data = await apiClient.request<{ attempt_id: number }>(`/quizzes/${quizId}/start`, {
         method: "POST",
         credentials: "include",
       });
-      if (response.ok) {
-        const data = await response.json();
-        // Redirect to quiz taking interface
-        window.location.href = `/quiz-attempt/${data.attempt_id}`;
-      }
+      window.location.href = `/quiz-attempt/${data.attempt_id}`;
     } catch (error) {
       console.error("Error starting quiz:", error);
     }
@@ -153,13 +135,8 @@ const StudentAssessments: React.FC = () => {
 
   const fetchQuizAttempts = async (quizId: number) => {
     try {
-      const response = await fetch(`/api/quizzes/${quizId}/my-attempts`, {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setQuizAttempts(data.attempts);
-      }
+      const data = await apiClient.request<{ attempts: QuizAttempt[] }>(`/quizzes/${quizId}/my-attempts`, { credentials: "include" });
+      setQuizAttempts(data.attempts);
     } catch (error) {
       console.error("Error fetching quiz attempts:", error);
     }

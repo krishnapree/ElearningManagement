@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { apiClient } from '../api/client'
 
 interface AcademicRecord {
   student_info: {
@@ -63,25 +64,12 @@ const StudentAcademicRecords: React.FC = () => {
   const fetchAcademicRecords = async () => {
     try {
       setLoading(true)
-      
       // Fetch academic record overview
-      const recordResponse = await fetch('/api/student/academic-record', {
-        credentials: 'include'
-      })
-      if (recordResponse.ok) {
-        const recordData = await recordResponse.json()
-        setAcademicRecord(recordData.record)
-      }
-
+      const recordData = await apiClient.request<{ record: AcademicRecord }>('/student/academic-record', { credentials: 'include' })
+      setAcademicRecord(recordData.record)
       // Fetch transcript
-      const transcriptResponse = await fetch('/api/student/transcript', {
-        credentials: 'include'
-      })
-      if (transcriptResponse.ok) {
-        const transcriptData = await transcriptResponse.json()
-        setTranscript(transcriptData.transcript)
-      }
-
+      const transcriptData = await apiClient.request<{ transcript: Transcript }>('/student/transcript', { credentials: 'include' })
+      setTranscript(transcriptData.transcript)
     } catch (error) {
       console.error('Error fetching academic records:', error)
     } finally {
@@ -91,11 +79,8 @@ const StudentAcademicRecords: React.FC = () => {
 
   const downloadTranscript = async () => {
     try {
-      const response = await fetch('/api/student/transcript/download', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
+      const response = await apiClient.request<Response>('/student/transcript/download', { credentials: 'include' })
+      if (response instanceof Response && response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')

@@ -11,6 +11,7 @@ import {
   Calendar,
   Target,
 } from "lucide-react";
+import { apiClient } from '../api/client';
 
 interface Course {
   id: number;
@@ -90,13 +91,8 @@ const LecturerAssessments: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/lecturer/courses", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data.courses);
-      }
+      const data = await apiClient.request<{ courses: Course[] }>("/lecturer/courses", { credentials: "include" });
+      setCourses(data.courses);
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
@@ -104,13 +100,8 @@ const LecturerAssessments: React.FC = () => {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await fetch("/api/lecturer/quizzes", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setQuizzes(data.quizzes);
-      }
+      const data = await apiClient.request<{ quizzes: Quiz[] }>("/lecturer/quizzes", { credentials: "include" });
+      setQuizzes(data.quizzes);
     } catch (error) {
       console.error("Error fetching quizzes:", error);
     } finally {
@@ -120,13 +111,8 @@ const LecturerAssessments: React.FC = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch("/api/lecturer/assignments", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setAssignments(data.assignments);
-      }
+      const data = await apiClient.request<{ assignments: Assignment[] }>("/lecturer/assignments", { credentials: "include" });
+      setAssignments(data.assignments);
     } catch (error) {
       console.error("Error fetching assignments:", error);
     }
@@ -135,7 +121,7 @@ const LecturerAssessments: React.FC = () => {
   const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/quizzes", {
+      await apiClient.request("/quizzes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,19 +129,16 @@ const LecturerAssessments: React.FC = () => {
         credentials: "include",
         body: JSON.stringify(quizForm),
       });
-
-      if (response.ok) {
-        setShowQuizModal(false);
-        setQuizForm({
-          title: "",
-          description: "",
-          course_id: "",
-          time_limit: 30,
-          max_attempts: 3,
-          is_published: false,
-        });
-        fetchQuizzes();
-      }
+      setShowQuizModal(false);
+      setQuizForm({
+        title: "",
+        description: "",
+        course_id: "",
+        time_limit: 30,
+        max_attempts: 3,
+        is_published: false,
+      });
+      fetchQuizzes();
     } catch (error) {
       console.error("Error creating quiz:", error);
     }
@@ -164,7 +147,7 @@ const LecturerAssessments: React.FC = () => {
   const handleCreateAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/assignments", {
+      await apiClient.request("/assignments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -172,21 +155,18 @@ const LecturerAssessments: React.FC = () => {
         credentials: "include",
         body: JSON.stringify(assignmentForm),
       });
-
-      if (response.ok) {
-        setShowAssignmentModal(false);
-        setAssignmentForm({
-          title: "",
-          description: "",
-          course_id: "",
-          due_date: "",
-          max_points: 100,
-          assignment_type: "homework",
-          instructions: "",
-          is_published: false,
-        });
-        fetchAssignments();
-      }
+      setShowAssignmentModal(false);
+      setAssignmentForm({
+        title: "",
+        description: "",
+        course_id: "",
+        due_date: "",
+        max_points: 100,
+        assignment_type: "homework",
+        instructions: "",
+        is_published: false,
+      });
+      fetchAssignments();
     } catch (error) {
       console.error("Error creating assignment:", error);
     }

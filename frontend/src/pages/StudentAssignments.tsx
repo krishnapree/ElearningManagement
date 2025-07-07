@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { apiClient } from '../api/client'
 
 interface Assignment {
   id: number
@@ -35,14 +36,8 @@ const StudentAssignments: React.FC = () => {
   const fetchAssignments = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/student/assignments', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setAssignments(data.assignments || [])
-      }
+      const data = await apiClient.request<{ assignments: Assignment[] }>('/student/assignments', { credentials: 'include' })
+      setAssignments(data.assignments || [])
     } catch (error) {
       console.error('Error fetching assignments:', error)
     } finally {
@@ -53,26 +48,21 @@ const StudentAssignments: React.FC = () => {
   const handleSubmitAssignment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedAssignment || !submissionFile) return
-
     try {
       setSubmitting(true)
       const formData = new FormData()
       formData.append('file', submissionFile)
       formData.append('comments', submissionComments)
-
-      const response = await fetch(`/api/assignments/${selectedAssignment.id}/submit`, {
+      await apiClient.request(`/assignments/${selectedAssignment.id}/submit`, {
         method: 'POST',
         credentials: 'include',
         body: formData
       })
-
-      if (response.ok) {
-        setShowSubmissionModal(false)
-        setSelectedAssignment(null)
-        setSubmissionFile(null)
-        setSubmissionComments('')
-        fetchAssignments()
-      }
+      setShowSubmissionModal(false)
+      setSelectedAssignment(null)
+      setSubmissionFile(null)
+      setSubmissionComments('')
+      fetchAssignments()
     } catch (error) {
       console.error('Failed to submit assignment:', error)
     } finally {

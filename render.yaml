@@ -2,22 +2,23 @@ services:
   # Backend API Service
   - type: web
     name: eduflow-backend
-    env: docker
+    env: python
     rootDir: backend
-    dockerfilePath: Dockerfile
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
     envVars:
       - key: DATABASE_URL
         value: sqlite:///./lms.db
       - key: ENVIRONMENT
         value: production
       - key: CORS_ORIGINS
-        sync: false
+        value: https://eduflow-frontend.onrender.com,http://localhost:5173
       - key: GEMINI_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: JWT_SECRET_KEY
-        generateValue: true
+        value: demo-jwt-secret-key-for-render-deployment
     healthCheckPath: /api/health
 
   # Frontend Static Site Service
@@ -29,7 +30,7 @@ services:
     rootDir: frontend
     envVars:
       - key: VITE_API_URL
-        value: https://elearningmanagement.onrender.com
+        value: https://eduflow-backend.onrender.com
       - key: VITE_NODE_ENV
         value: production
     headers:

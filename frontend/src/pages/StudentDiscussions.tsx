@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { apiClient } from '../api/client'
 
 interface Course {
   id: number
@@ -72,16 +73,10 @@ const StudentDiscussions: React.FC = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/student/enrolled-courses', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setCourses(data.courses || [])
-        if (data.courses.length > 0 && !selectedCourse) {
-          setSelectedCourse(data.courses[0].id)
-        }
+      const data = await apiClient.request<{ courses: Course[] }>('/student/enrolled-courses', { credentials: 'include' })
+      setCourses(data.courses || [])
+      if (data.courses.length > 0 && !selectedCourse) {
+        setSelectedCourse(data.courses[0].id)
       }
     } catch (error) {
       console.error('Error fetching courses:', error)
@@ -92,16 +87,9 @@ const StudentDiscussions: React.FC = () => {
 
   const fetchDiscussions = async () => {
     if (!selectedCourse) return
-
     try {
-      const response = await fetch(`/api/courses/${selectedCourse}/discussions`, {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setDiscussions(data.discussions || [])
-      }
+      const data = await apiClient.request<{ discussions: Discussion[] }>(`/courses/${selectedCourse}/discussions`, { credentials: 'include' })
+      setDiscussions(data.discussions || [])
     } catch (error) {
       console.error('Error fetching discussions:', error)
     }
@@ -109,16 +97,9 @@ const StudentDiscussions: React.FC = () => {
 
   const fetchReplies = async () => {
     if (!selectedDiscussion) return
-
     try {
-      const response = await fetch(`/api/discussions/${selectedDiscussion.id}/replies`, {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setReplies(data.replies || [])
-      }
+      const data = await apiClient.request<{ replies: Reply[] }>(`/discussions/${selectedDiscussion.id}/replies`, { credentials: 'include' })
+      setReplies(data.replies || [])
     } catch (error) {
       console.error('Error fetching replies:', error)
     }
@@ -127,26 +108,17 @@ const StudentDiscussions: React.FC = () => {
   const handleCreateDiscussion = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedCourse) return
-
     try {
       setSubmitting(true)
-      const response = await fetch('/api/discussions', {
+      await apiClient.request('/discussions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          ...newDiscussion,
-          course_id: selectedCourse
-        })
+        body: JSON.stringify({ ...newDiscussion, course_id: selectedCourse })
       })
-
-      if (response.ok) {
-        setShowCreateModal(false)
-        setNewDiscussion({ title: '', content: '' })
-        fetchDiscussions()
-      }
+      setShowCreateModal(false)
+      setNewDiscussion({ title: '', content: '' })
+      fetchDiscussions()
     } catch (error) {
       console.error('Failed to create discussion:', error)
     } finally {
@@ -157,25 +129,17 @@ const StudentDiscussions: React.FC = () => {
   const handleCreateReply = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedDiscussion || !newReply.trim()) return
-
     try {
       setSubmitting(true)
-      const response = await fetch(`/api/discussions/${selectedDiscussion.id}/replies`, {
+      await apiClient.request(`/discussions/${selectedDiscussion.id}/replies`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          content: newReply
-        })
+        body: JSON.stringify({ content: newReply })
       })
-
-      if (response.ok) {
-        setNewReply('')
-        fetchReplies()
-        fetchDiscussions() // Update reply count
-      }
+      setNewReply('')
+      fetchReplies()
+      fetchDiscussions()
     } catch (error) {
       console.error('Failed to create reply:', error)
     } finally {

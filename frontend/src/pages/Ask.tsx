@@ -11,6 +11,13 @@ interface AIResponse {
   language?: string;
 }
 
+interface PDFUploadResponse {
+  session_id: number;
+  filename?: string;
+  summary?: string;
+  message?: string;
+}
+
 const Ask: React.FC = () => {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState<AIResponse | null>(null);
@@ -54,17 +61,17 @@ const Ask: React.FC = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const data = await apiClient.request<{ session_id: number }>("/upload-pdf", {
+      const data = await apiClient.request<PDFUploadResponse>("/upload-pdf", {
         method: "POST",
         body: formData,
         headers: {} // Let browser set Content-Type for FormData
       });
       setPdfFile(file);
-      setChatSessionId(data.chat_session_id);
+      setChatSessionId(data.session_id);
       setChatHistory([
         {
           type: "ai",
-          content: `I've analyzed your PDF "${data.filename}". Here's a summary:\n\n${data.summary}`,
+          content: `I've analyzed your PDF "${data.filename || file.name}". ${data.message || data.summary || "You can now ask questions about this document."}`,
         },
       ]);
 
@@ -95,7 +102,7 @@ const Ask: React.FC = () => {
       setChatHistory((prev) => [
         ...prev,
         { type: "user", content: question },
-        { type: "ai", content: data.response.text },
+        { type: "ai", content: data.text },
       ]);
 
       setQuestion("");
